@@ -1,38 +1,39 @@
 import 'dart:convert';
 import 'dart:io';
+
 import 'package:YOURDRS_FlutterAPP/common/app_colors.dart';
 import 'package:YOURDRS_FlutterAPP/common/app_log_helper.dart';
 import 'package:YOURDRS_FlutterAPP/common/app_strings.dart';
 import 'package:YOURDRS_FlutterAPP/common/app_toast_message.dart';
+import 'package:YOURDRS_FlutterAPP/helper/db_helper.dart';
 import 'package:YOURDRS_FlutterAPP/network/models/external_dictations/external_databse_model.dart';
+import 'package:YOURDRS_FlutterAPP/network/models/manual_dictations/document_type.dart';
+import 'package:YOURDRS_FlutterAPP/network/models/manual_dictations/external_dictation_attacment_model.dart';
+import 'package:YOURDRS_FlutterAPP/network/models/manual_dictations/location_field_model.dart';
 import 'package:YOURDRS_FlutterAPP/network/models/manual_dictations/photo_list.dart';
 import 'package:YOURDRS_FlutterAPP/network/models/manual_dictations/practice.dart';
-import 'package:YOURDRS_FlutterAPP/network/models/manual_dictations/document_type.dart';
-import 'package:YOURDRS_FlutterAPP/network/models/manual_dictations/location_field_model.dart';
 import 'package:YOURDRS_FlutterAPP/network/models/manual_dictations/provider_model.dart';
-import 'package:YOURDRS_FlutterAPP/helper/db_helper.dart';
 import 'package:YOURDRS_FlutterAPP/network/repo/local/preference/local_storage.dart';
 import 'package:YOURDRS_FlutterAPP/network/services/dictation/extrenalattachmnent_postapi.dart';
 import 'package:YOURDRS_FlutterAPP/ui/external_attachment/externalattchment_main.dart';
 import 'package:YOURDRS_FlutterAPP/ui/manual_dictaions/date_Valid.dart';
 import 'package:YOURDRS_FlutterAPP/utils/route_generator.dart';
 import 'package:YOURDRS_FlutterAPP/widget/buttons/raised_buttons.dart';
-import 'package:connectivity/connectivity.dart';
-import 'package:flutter/cupertino.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:intl/intl.dart';
-import 'package:toggle_switch/toggle_switch.dart';
 import 'package:YOURDRS_FlutterAPP/widget/dropdowns/documenttype.dart';
 import 'package:YOURDRS_FlutterAPP/widget/dropdowns/location_field.dart';
 import 'package:YOURDRS_FlutterAPP/widget/dropdowns/practice_field.dart';
 import 'package:YOURDRS_FlutterAPP/widget/dropdowns/provider_field.dart';
+import 'package:connectivity/connectivity.dart';
+import 'package:file_picker/file_picker.dart';
+import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:intl/intl.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:image_picker/image_picker.dart';
-import 'package:file_picker/file_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:YOURDRS_FlutterAPP/network/models/manual_dictations/external_dictation_attacment_model.dart';
+import 'package:toggle_switch/toggle_switch.dart';
 
 ///------------------------------This is the SubmitNew class and this class contains all the fields for ExternalAttachment screen
 class SubmitNew extends StatefulWidget {
@@ -40,6 +41,7 @@ class SubmitNew extends StatefulWidget {
   @override
   _SubmitNewState createState() => _SubmitNewState();
 }
+
 class _SubmitNewState extends State<SubmitNew> {
   bool widgetVisible = false;
   bool visible = false;
@@ -82,13 +84,14 @@ class _SubmitNewState extends State<SubmitNew> {
   final _dateOfbirthController = TextEditingController();
   String content, name;
   var extId;
-  int uploadedToServerTrue = 1,uploadedToServerFalse = 0;
-  AppToast appToast=AppToast();
-List photoListOfGallery = [];
+  int uploadedToServerTrue = 1, uploadedToServerFalse = 0;
+  AppToast appToast = AppToast();
+  List photoListOfGallery = [];
   bool emergencyAddOn = true;
   final GlobalKey<State> _keyLoader = new GlobalKey<State>();
+
 //-------------------------------checking internet condition
-   check() async {
+  check() async {
     var connectivityResult = await (Connectivity().checkConnectivity());
     if (connectivityResult == ConnectivityResult.mobile ||
         connectivityResult == ConnectivityResult.wifi) {
@@ -102,6 +105,7 @@ List photoListOfGallery = [];
       appToast.showToast(AppStrings.no_internet);
     }
   }
+
   //--------------------Show process indicator
   Future<void> showLoadingDialog(BuildContext context, GlobalKey key) async {
     return showDialog<void>(
@@ -122,7 +126,7 @@ List photoListOfGallery = [];
                     ),
                     CircularProgressIndicator(
                       valueColor:
-                      AlwaysStoppedAnimation(CustomizedColors.primaryColor),
+                          AlwaysStoppedAnimation(CustomizedColors.primaryColor),
                     ),
                     SizedBox(
                       width: 35,
@@ -150,9 +154,11 @@ List photoListOfGallery = [];
     DeleteFiles();
     super.initState();
   }
+
   void DeleteFiles() async {
     await DatabaseHelper.db.deleteAllExternalRecords();
   }
+
   @override
   Widget build(BuildContext context) {
     return ListView(
@@ -161,7 +167,7 @@ List photoListOfGallery = [];
           onTap: () {
             FocusScope.of(context).requestFocus(new FocusNode());
           },
-          child:Form(
+          child: Form(
             key: _formKey,
             child: Container(
               child: Column(
@@ -227,7 +233,7 @@ List photoListOfGallery = [];
 
                   Container(
                     child: Padding(
-                      padding: const EdgeInsets.only(top:10),
+                      padding: const EdgeInsets.only(top: 10),
                       child: Text(
                         AppStrings.provider,
                         style: TextStyle(
@@ -240,8 +246,8 @@ List photoListOfGallery = [];
                     width: MediaQuery.of(context).size.width * 0.95,
                   ),
                   Padding(
-                      padding: EdgeInsets.only(top: 10),
-                    child:   Container(
+                    padding: EdgeInsets.only(top: 10),
+                    child: Container(
                       width: MediaQuery.of(context).size.width * 0.95,
                       child: ExternalProviderDropDown(
                         onTapOfProvider: (ProviderList value) {
@@ -249,7 +255,6 @@ List photoListOfGallery = [];
                             providerId1 = '${value.providerId}';
                             selectedProvidername = '${value?.displayname}';
                           });
-
                         },
                         PracticeLocationId: LocationId,
                       ),
@@ -283,10 +288,11 @@ List photoListOfGallery = [];
                             //color: Colors.yellow,
                             child: TextFormField(
                               inputFormatters: [
-                                WhitelistingTextInputFormatter(RegExp("[a-zA-Z]"))
+                                WhitelistingTextInputFormatter(
+                                    RegExp("[a-zA-Z]"))
                               ],
                               controller: firstname,
-                              validator:validateInput,
+                              validator: validateInput,
                               obscureText: false,
                               decoration: InputDecoration(
                                 contentPadding: EdgeInsets.all(20),
@@ -332,10 +338,11 @@ List photoListOfGallery = [];
                             //color: Colors.yellow,
                             child: TextFormField(
                               inputFormatters: [
-                                WhitelistingTextInputFormatter(RegExp("[a-zA-Z]"))
+                                WhitelistingTextInputFormatter(
+                                    RegExp("[a-zA-Z]"))
                               ],
                               controller: lastname,
-                              validator:validateInput,
+                              validator: validateInput,
                               obscureText: false,
                               decoration: InputDecoration(
                                 //  errorText: validationService.lastName.error,
@@ -371,17 +378,17 @@ List photoListOfGallery = [];
                         ),
                         Padding(
                           padding: const EdgeInsets.only(top: 10, right: 8),
-                          child:
-                          Container(
+                          child: Container(
                             height: 60,
                             width: MediaQuery.of(context).size.width * 0.95,
                             child: TextFormField(
                               inputFormatters: [
-                                FilteringTextInputFormatter.allow(RegExp("[0-9\\-]")),
+                                FilteringTextInputFormatter.allow(
+                                    RegExp("[0-9\\-]")),
                                 LengthLimitingTextInputFormatter(10),
                                 DateValidFormatter(),
                               ],
-                              validator:validateInput,
+                              validator: validateInput,
                               controller: _dateOfbirthController,
                               minLines: 2,
                               maxLines: 10,
@@ -391,8 +398,9 @@ List photoListOfGallery = [];
                                 labelText: AppStrings.dateFormatLableHintText,
                                 suffixIcon: Padding(
                                   padding: EdgeInsets.all(8.0),
-                                  child:   IconButton(
-                                    icon: Icon(Icons.calendar_today_sharp,color: CustomizedColors.primaryColor),
+                                  child: IconButton(
+                                    icon: Icon(Icons.calendar_today_sharp,
+                                        color: CustomizedColors.primaryColor),
                                     onPressed: () async {
                                       DateTime d = DateTime(1900);
                                       // FocusScope.of(context).requestFocus(FocusNode());
@@ -403,9 +411,11 @@ List photoListOfGallery = [];
                                           firstDate: DateTime(1900),
                                           lastDate: DateTime.now());
                                       final DateFormat formats = DateFormat(
-                                          AppStrings.dateFormatForDatePicker);;
+                                          AppStrings.dateFormatForDatePicker);
+                                      ;
                                       selectedDate = formats.format(d);
-                                      _dateOfbirthController.text = selectedDate.toString();
+                                      _dateOfbirthController.text =
+                                          selectedDate.toString();
                                     },
                                   ),
                                 ),
@@ -441,11 +451,18 @@ List photoListOfGallery = [];
                     padding: const EdgeInsets.only(top: 7),
                     child: DocumentDropDown(
                       onTapDocument: (ExternalDocumentTypesList value) {
+                        ExternalDocumentTypesList doccc;
+                        DatabaseHelper.db.getDocumentType();
+                        String doc=doccc.externalDocumentTypeName;
+                        print("yutgyjykh??????????????????????????????????????????????????????");
+                        print("$doc");
                         selecteddocumnettype = value.externalDocumentTypeName;
                         documenttypeId = value.id;
                       },
+
                     ),
                   ),
+
 //----------------------------------emergency Field
 
                   Container(
@@ -516,7 +533,7 @@ List photoListOfGallery = [];
                             //color: Colors.yellow,
                             child: TextFormField(
                               controller: Description,
-                              validator:validateInput,
+                              validator: validateInput,
                               keyboardType: TextInputType.multiline,
                               minLines: 2,
                               maxLines: 10,
@@ -555,8 +572,8 @@ List photoListOfGallery = [];
                                   Text(
                                     'Add Image/Take Picture',
                                     style: TextStyle(
-                                        color:
-                                        CustomizedColors.addimage_textColor),
+                                        color: CustomizedColors
+                                            .addimage_textColor),
                                   ),
                                 ],
                               ),
@@ -569,7 +586,7 @@ List photoListOfGallery = [];
                   ),
                   SizedBox(height: 0),
 
- //---------------------------display the camera images to the ui
+                  //---------------------------display the camera images to the ui
 
                   Visibility(
                     visible: widgetVisible,
@@ -588,33 +605,32 @@ List photoListOfGallery = [];
                               width: MediaQuery.of(context).size.width * 0.85,
                               child: Center(
                                   child: Stack(children: [
-                                    image == null
-                                        ? Text(AppStrings.noImageselected_text)
-                                        : Image.file(
-                                      image,
-                                      fit: BoxFit.contain,
-                                    ),
-                                    Positioned(
-                                      right: -10,
-                                      top: -5,
-                                      child: Visibility(
-                                        visible: imageVisible,
-                                        child: IconButton(
-                                          icon: new Icon(
-                                            Icons.close,
-                                          ),
-                                          onPressed: () {
-                                            setState(() {
-                                              image = null;
-                                              imageVisible = false;
-                                            });
-                                          },
-                                        ),
+                                image == null
+                                    ? Text(AppStrings.noImageselected_text)
+                                    : Image.file(
+                                        image,
+                                        fit: BoxFit.contain,
                                       ),
+                                Positioned(
+                                  right: -10,
+                                  top: -5,
+                                  child: Visibility(
+                                    visible: imageVisible,
+                                    child: IconButton(
+                                      icon: new Icon(
+                                        Icons.close,
+                                      ),
+                                      onPressed: () {
+                                        setState(() {
+                                          image = null;
+                                          imageVisible = false;
+                                        });
+                                      },
                                     ),
-                                  ])),
+                                  ),
+                                ),
+                              ])),
                             ),
-
                           ]),
                         ],
                       ),
@@ -630,75 +646,75 @@ List photoListOfGallery = [];
                         Builder(
                           builder: (BuildContext context) => isLoadingPath
                               ? Padding(
-                              padding: const EdgeInsets.only(bottom: 10.0),
-                              child: const CircularProgressIndicator())
+                                  padding: const EdgeInsets.only(bottom: 10.0),
+                                  child: const CircularProgressIndicator())
                               : filepath != null ||
-                              (paths != null &&
-                                  paths.values != null &&
-                                  paths.values.isNotEmpty)
-                              ? new Container(
-                            decoration: BoxDecoration(
-                              border: Border.all(
-                                color:
-                                CustomizedColors.homeSubtitleColor,
-                              ),
-                            ),
-                            height: 100,
-                            width: MediaQuery.of(context).size.width *
-                                0.85,
-                            child: new ListView.separated(
-                              scrollDirection: Axis.horizontal,
-                              itemCount:
-                              paths != null && paths.isNotEmpty
-                                  ? paths.length
-                                  : 1,
-                              itemBuilder:
-                                  (BuildContext context, index) {
-                                final bool isMultiPath =
-                                    paths != null && paths.isNotEmpty;
-                                final filePath1 = isMultiPath
-                                    ? paths.values
-                                    .toList()[index]
-                                    .toString()
-                                    : filepath;
-                                print(filePath1);
-                                return Container(
-                                  color: CustomizedColors
-                                      .homeSubtitleColor,
-                                  margin: const EdgeInsets.all(8),
-                                  child: Stack(children: [
-                                    filePath1 != null
-                                        ? Image.file(
-                                      File(filePath1),
-                                      fit: BoxFit.contain,
-                                    )
-                                        : Container(),
-                                    Positioned(
-                                      right: -10,
-                                      top: -5,
-                                      child: IconButton(
-                                        icon: new Icon(
-                                          Icons.close,
+                                      (paths != null &&
+                                          paths.values != null &&
+                                          paths.values.isNotEmpty)
+                                  ? new Container(
+                                      decoration: BoxDecoration(
+                                        border: Border.all(
+                                          color: CustomizedColors
+                                              .homeSubtitleColor,
                                         ),
-                                        onPressed: () {
-                                          setState(() {
-                                            var filename = basename(
-                                                paths.values
-                                                    .toList()[index]);
-                                            paths.remove(filename);
-                                          });
-                                        },
                                       ),
-                                    ),
-                                  ]),
-                                );
-                              },
-                              separatorBuilder:
-                                  (BuildContext context, int index) =>
-                                  Divider(),
-                            ),
-                          )
-                              : Container(),
+                                      height: 100,
+                                      width: MediaQuery.of(context).size.width *
+                                          0.85,
+                                      child: new ListView.separated(
+                                        scrollDirection: Axis.horizontal,
+                                        itemCount:
+                                            paths != null && paths.isNotEmpty
+                                                ? paths.length
+                                                : 1,
+                                        itemBuilder:
+                                            (BuildContext context, index) {
+                                          final bool isMultiPath =
+                                              paths != null && paths.isNotEmpty;
+                                          final filePath1 = isMultiPath
+                                              ? paths.values
+                                                  .toList()[index]
+                                                  .toString()
+                                              : filepath;
+                                          print(filePath1);
+                                          return Container(
+                                            color: CustomizedColors
+                                                .homeSubtitleColor,
+                                            margin: const EdgeInsets.all(8),
+                                            child: Stack(children: [
+                                              filePath1 != null
+                                                  ? Image.file(
+                                                      File(filePath1),
+                                                      fit: BoxFit.contain,
+                                                    )
+                                                  : Container(),
+                                              Positioned(
+                                                right: -10,
+                                                top: -5,
+                                                child: IconButton(
+                                                  icon: new Icon(
+                                                    Icons.close,
+                                                  ),
+                                                  onPressed: () {
+                                                    setState(() {
+                                                      var filename = basename(
+                                                          paths.values
+                                                              .toList()[index]);
+                                                      paths.remove(filename);
+                                                    });
+                                                  },
+                                                ),
+                                              ),
+                                            ]),
+                                          );
+                                        },
+                                        separatorBuilder:
+                                            (BuildContext context, int index) =>
+                                                Divider(),
+                                      ),
+                                    )
+                                  : Container(),
                         ),
                       ],
                     ),
@@ -707,7 +723,8 @@ List photoListOfGallery = [];
 //-------------------------------------Cancel and Submit Buttons
 
                   Padding(
-                    padding: const EdgeInsets.only(top: 20, left: 20, right: 20),
+                    padding:
+                        const EdgeInsets.only(top: 20, left: 20, right: 20),
                     child: Container(
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -720,9 +737,10 @@ List photoListOfGallery = [];
                               child: RaisedBttn(
                                 onPressed: () {
                                   RouteGenerator.navigatorKey.currentState
-                                      .pushNamedAndRemoveUntil(ExternalAttachments.routeName,
-                                        (Route<dynamic> route) => false,);
-
+                                      .pushNamedAndRemoveUntil(
+                                    ExternalAttachments.routeName,
+                                    (Route<dynamic> route) => false,
+                                  );
                                 },
                                 text: AppStrings.cancel,
                                 button_color: CustomizedColors
@@ -735,65 +753,64 @@ List photoListOfGallery = [];
                             ),
                           ),
 
- //------------------------------to show the gallery photos
+                          //------------------------------to show the gallery photos
                           SizedBox(width: 10),
                           Container(
                             height: 60,
                             width: 150,
                             child: Card(
-                              // color: Colors.blue,
+                                // color: Colors.blue,
                                 child: RaisedBttn(
-                                  onPressed: () async {
-                                    try {
-                                      await check();
-                                      if (isInternetAvailable == true) {
-                                        if (_formKey.currentState.validate()) {
-                                          showLoadingDialog(context, _keyLoader);
+                              onPressed: () async {
+                                try {
+                                  await check();
+                                  if (isInternetAvailable == true) {
+                                    if (_formKey.currentState.validate()) {
+                                      showLoadingDialog(context, _keyLoader);
 //---------------------------------------------save gallary images to sever with internet
-                                          await _saveGalleryImagesTosever();
+                                      await _saveGalleryImagesTosever();
 //---------------------------------------------save camera images with internet
-                                          await _saveCameraImagesToServer();
+                                      await _saveCameraImagesToServer();
 
 //------------------------------------------------post api data
-                                          await  _saveExternalAttachmentDictation();
+                                      await _saveExternalAttachmentDictation();
 
-                                          await appToast.showToast(AppStrings.showtoast_text);
+                                      await appToast
+                                          .showToast(AppStrings.showtoast_text);
 
-                                         //clear the all the fields after submitting the data
-                                          await RouteGenerator.navigatorKey.currentState
-                                              .pushReplacementNamed(
+                                      //clear the all the fields after submitting the data
+                                      await RouteGenerator
+                                          .navigatorKey.currentState
+                                          .pushReplacementNamed(
                                               ExternalAttachments.routeName);
-
-                                        }
-                                      } else {
-                                        if (_formKey.currentState.validate()) {
-                                          showLoadingDialog(context, _keyLoader);
-
-
- //-------------------------------------------save camera images without internet
-                                          await _saveCameraImagesToOfflinedata();
-
- //-------------------------------------------save gallery images without internet
-                                          await _saveGalleryImagesToDB();
-
-                                          appToast.showToast(AppStrings.showtoastdb_text);
-
-                                          //clear the all the fields after submitting the data
-                                          await RouteGenerator.navigatorKey.currentState
-                                              .pushReplacementNamed(
-                                              ExternalAttachments.routeName);
-                                        }
-                                      }
-
-                                    }on Exception catch (e) {
-                                      print(e.toString());
                                     }
-                                  },
+                                  } else {
+                                    if (_formKey.currentState.validate()) {
+                                      showLoadingDialog(context, _keyLoader);
 
-                                  text: AppStrings.submit_buttontext,
-                                  button_color: CustomizedColors.submitbuttonColor,
-                                )
-                            ),
+                                      //-------------------------------------------save camera images without internet
+                                      await _saveCameraImagesToOfflinedata();
+
+                                      //-------------------------------------------save gallery images without internet
+                                      await _saveGalleryImagesToDB();
+
+                                      appToast.showToast(
+                                          AppStrings.showtoastdb_text);
+
+                                      //clear the all the fields after submitting the data
+                                      await RouteGenerator
+                                          .navigatorKey.currentState
+                                          .pushReplacementNamed(
+                                              ExternalAttachments.routeName);
+                                    }
+                                  }
+                                } on Exception catch (e) {
+                                  print(e.toString());
+                                }
+                              },
+                              text: AppStrings.submit_buttontext,
+                              button_color: CustomizedColors.submitbuttonColor,
+                            )),
                             //color: Colors.blue,
                           ),
                         ],
@@ -801,7 +818,6 @@ List photoListOfGallery = [];
                       height: 100,
                     ),
                   ),
-
                 ],
               ),
             ),
@@ -852,6 +868,7 @@ List photoListOfGallery = [];
 
     return "${formatted}" + imageName + AppStrings.imageFormat;
   }
+
 //-------------------save the gallery images to folder
   void saveGalleryImageToFolder(String patientName, String dateFormat) async {
     for (int i = 0; i < paths.keys.toList().length; i++) {
@@ -866,12 +883,13 @@ List photoListOfGallery = [];
       );
     }
   }
+
   //---------------------------------------function to open camera
 
   Future openCamera() async {
     image = await ImagePicker.pickImage(
         source: ImageSource.camera, imageQuality: 100);
-    if(image!=null){
+    if (image != null) {
       String path = image.path;
       createFileName(path);
       setState(() {
@@ -881,6 +899,7 @@ List photoListOfGallery = [];
       });
     }
   }
+
   //--------------------------------------------------function to open gallery
 
   Future openGallery() async {
@@ -909,14 +928,15 @@ List photoListOfGallery = [];
         fileName = filepath != null
             ? filepath.split('/').last
             : paths != null
-            ? paths.keys.toString()
-            : '...';
+                ? paths.keys.toString()
+                : '...';
         visible = true;
       });
     } on PlatformException catch (e) {
       print(AppStrings.filePathNotFound + e.toString());
     }
   }
+
   //----------------------------------------cupertino sheet
 
   void _show(BuildContext ctx) {
@@ -950,56 +970,60 @@ List photoListOfGallery = [];
 
   //-----------------------------post api data to store the  camera images and details to server
   _saveExternalAttachmentDictation() async {
-     try{
-       if (toggleVal == 0) {
-         emergencyAddOn = false;
-       } else {
-         emergencyAddOn = true;
-       }
+    try {
+      if (toggleVal == 0) {
+        emergencyAddOn = false;
+      } else {
+        emergencyAddOn = true;
+      }
       final String formatted = formatter.format(now);
 
       final bytes = File(image?.path).readAsBytesSync();
       String convertedImg = base64Encode(bytes);
-      imageName = "${firstname.text}_${formatted}_${basename('${image?.path}')}";
-      String attachmentType="jpg";
-      photoListOfGallery.add(
-          {
-            "header": {
-              "status": "string",
-              "statusCode": "string",
-              "statusMessage": "string"
-            },
-            "content": convertedImg,
-            "name": imageName,
-            "attachmentType": ".jpg"
-          }
-      );
+      imageName =
+          "${firstname.text}_${formatted}_${basename('${image?.path}')}";
+      String attachmentType = "jpg";
+      photoListOfGallery.add({
+        "header": {
+          "status": "string",
+          "statusCode": "string",
+          "statusMessage": "string"
+        },
+        "content": convertedImg,
+        "name": imageName,
+        "attachmentType": ".jpg"
+      });
       // String attachmentType="jpg";
       ExternalAttachmentPost apiAttachmentPostServices =
-      ExternalAttachmentPost();
+          ExternalAttachmentPost();
       SaveExternalDictationOrAttachment saveDictationAttachments =
-      await apiAttachmentPostServices.postApiServiceMethod(
-          int.parse(practiceId)??null,//selectedPracticeId
-          int.parse(LocationId)??null,//locationId
-          int.parse(providerId1)??null,//providerId
-          firstname.text,//patientFname
-          lastname.text,//patientLname
-          _dateOfbirthController.text,//patientDob
-          memberId,
-          documenttypeId,
-          emergencyAddOn,
-          Description.text,
-          null,//convertedImg,
-          null,
-          null,
-          photoListOfGallery
-      );
+          await apiAttachmentPostServices.postApiServiceMethod(
+              int.parse(practiceId) ?? null,
+              //selectedPracticeId
+              int.parse(LocationId) ?? null,
+              //locationId
+              int.parse(providerId1) ?? null,
+              //providerId
+              firstname.text,
+              //patientFname
+              lastname.text,
+              //patientLname
+              _dateOfbirthController.text,
+              //patientDob
+              memberId,
+              documenttypeId!=null ? (documenttypeId):null,
+              emergencyAddOn,
+              Description.text,
+              null,
+              //convertedImg,
+              null,
+              null,
+              photoListOfGallery);
       statusCode = saveDictationAttachments?.header?.statusCode;
       //printing status code
       print("status $statusCode");
       print("memberID:: " + memberId);
-    }
-    catch (e) {
+    } catch (e) {
       print('SaveAttachmentDictation exception ${e.toString()}');
     }
   }
@@ -1014,195 +1038,197 @@ List photoListOfGallery = [];
   }
 
   //------------save camera images to server with internet
-  _saveCameraImagesToServer()async{
-    if(image==null){
+  _saveCameraImagesToServer() async {
+    if (image == null) {
       return;
     }
     DateTime now = DateTime.now();
     String formattedDate = DateFormat(AppStrings.currentdate_text).format(now);
     int localExternalAttachmentId =
-    await DatabaseHelper.db.insertExternalAttachmentData(
+        await DatabaseHelper.db.insertExternalAttachmentData(
       ExternalAttachmentList(
         // externalattachmentid: extId ?? null,
         practiceid: int.parse(practiceId),
         practicename: selectedPractice2,
         locationid: int.parse(LocationId),
         locationname: selectedLocation,
-        providerid: providerId1!=null ? int.parse(providerId1):null,
+        providerid: providerId1 != null ? int.parse(providerId1) : null,
         providername: selectedProvidername,
-        externaldocumenttype: selecteddocumnettype,
-        externaldocumenttypeid: documenttypeId,
+        externaldocumenttype:selecteddocumnettype != null ? (selecteddocumnettype) : null,
+        externaldocumenttypeid: documenttypeId!=null?(documenttypeId):null,
         patientfirstname: firstname.text,
         patientlastname: lastname.text,
         patientdob: _dateOfbirthController.text,
         isemergencyaddon: toggleVal ?? false,
         description: Description.text,
         displayfilename:
-        selecteddocumnettype + "_" + memberId + "_" + formattedDate,
+            selecteddocumnettype??""+ "_" + memberId + "_" + formattedDate,
         uploadedtoserver: uploadedToServerTrue,
       ),
     );
 
     //----------------camera images insert to db
-    if(localExternalAttachmentId>0){
-     // print('inserting images of locAttachment $localExternalAttachmentId');
+    if (localExternalAttachmentId > 0) {
+      // print('inserting images of locAttachment $localExternalAttachmentId');
       final String formatted = formatter.format(now);
       int photoResult = await DatabaseHelper.db.insertPhotoLists(PhotoList(
-        // id: localExternalAttachmentId,
+          // id: localExternalAttachmentId,
           externalattachmentlocalid: localExternalAttachmentId,
-          attachmentname: '${firstname.text ?? ''}_${formatted}_${basename(image.path)}',
+          attachmentname:
+              '${firstname.text ?? ''}_${formatted}_${basename(image.path)}',
           createddate: '$now',
           attachmenttype: AppStrings.imageFormat,
-          physicalfilename: '${image?.path}')
-      );
-      print('photoResult $photoResult of locAttachment $localExternalAttachmentId');
+          physicalfilename: '${image?.path}'));
+      print(
+          'photoResult $photoResult of locAttachment $localExternalAttachmentId');
     }
-
   }
+
   //-----------save camera images to without interent
-  _saveCameraImagesToOfflinedata() async{
-    if(image==null){
+  _saveCameraImagesToOfflinedata() async {
+    if (image == null) {
       return;
     }
     DateTime now = DateTime.now();
     String formattedDate = DateFormat(AppStrings.currentdate_text).format(now);
-    int localExternalAttachmentId= await DatabaseHelper.db.insertExternalAttachmentData(
-        ExternalAttachmentList(
-
-          practiceid: int.parse(practiceId),
-          practicename: selectedPractice2,
-          locationid: LocationId!=null ? int.parse(LocationId):null,
-          locationname: selectedLocation,
-          providerid: providerId1!=null ? int.parse(providerId1):null,
-          providername: selectedProvidername,
-          externaldocumenttype: selecteddocumnettype,
-          externaldocumenttypeid: documenttypeId,
-          patientfirstname: firstname.text,
-          patientlastname: lastname.text,
-          patientdob: _dateOfbirthController.text,
-          isemergencyaddon: toggleVal ?? false,
-          description: Description.text,
-          displayfilename: selecteddocumnettype + "_" + memberId + "_" + formattedDate,
-          uploadedtoserver: uploadedToServerFalse,
-        )
-    );
+    int localExternalAttachmentId = await DatabaseHelper.db
+        .insertExternalAttachmentData(ExternalAttachmentList(
+      practiceid: int.parse(practiceId),
+      practicename: selectedPractice2,
+      locationid: LocationId != null ? int.parse(LocationId) : null,
+      locationname: selectedLocation,
+      providerid: providerId1 != null ? int.parse(providerId1) : null,
+      providername: selectedProvidername,
+      externaldocumenttype: selecteddocumnettype,
+      externaldocumenttypeid: documenttypeId,
+      patientfirstname: firstname.text,
+      patientlastname: lastname.text,
+      patientdob: _dateOfbirthController.text,
+      isemergencyaddon: toggleVal ?? false,
+      description: Description.text,
+      displayfilename:
+          selecteddocumnettype + "_" + memberId + "_" + formattedDate,
+      uploadedtoserver: uploadedToServerFalse,
+    ));
 
     //----------------camera images insert to db
-    if(localExternalAttachmentId>0){
+    if (localExternalAttachmentId > 0) {
       //print('inserting images of locAttachment $localExternalAttachmentId');
       final String formatted = formatter.format(now);
       int photoResult = await DatabaseHelper.db.insertPhotoLists(PhotoList(
-        // id: localExternalAttachmentId,
+          // id: localExternalAttachmentId,
           externalattachmentlocalid: localExternalAttachmentId,
-          attachmentname: '${firstname.text ?? ''}_${formatted}_${basename(image?.path)}',
+          attachmentname:
+              '${firstname.text ?? ''}_${formatted}_${basename(image?.path)}',
           createddate: '$now',
           attachmenttype: AppStrings.imageFormat,
           physicalfilename: '${image?.path}'));
-      print('photoResult $photoResult of locAttachment $localExternalAttachmentId');
+      print(
+          'photoResult $photoResult of locAttachment $localExternalAttachmentId');
     }
   }
 
   //-----------------save gallery images to DB without internet
-  _saveGalleryImagesToDB()async{
-    if(paths == null || paths.values == null){
+  _saveGalleryImagesToDB() async {
+    if (paths == null || paths.values == null) {
       return;
     }
     DateTime now = DateTime.now();
     String formattedDate = DateFormat(AppStrings.currentdate_text).format(now);
-    int localExternalAttachmentId= await DatabaseHelper.db.insertExternalAttachmentData(
-        ExternalAttachmentList(
-          practiceid: int.parse(practiceId),
-          practicename: selectedPractice2,
-          locationid: LocationId!=null ? int.parse(LocationId):null,
-          locationname: selectedLocation,
-          providerid: providerId1!=null ? int.parse(providerId1):null,
-          providername: selectedProvidername,
-          externaldocumenttype:
-          selecteddocumnettype,
-          externaldocumenttypeid: documenttypeId,
-          patientfirstname: firstname.text,
-          patientlastname: lastname.text,
-          patientdob: _dateOfbirthController.text,
-          isemergencyaddon: toggleVal ?? false,
-          description: Description.text,
-          displayfilename: selecteddocumnettype + "_" + memberId + "_" + formattedDate,
-          uploadedtoserver: uploadedToServerFalse,
-        ));
+    int localExternalAttachmentId = await DatabaseHelper.db
+        .insertExternalAttachmentData(ExternalAttachmentList(
+      practiceid: int.parse(practiceId),
+      practicename: selectedPractice2,
+      locationid: LocationId != null ? int.parse(LocationId) : null,
+      locationname: selectedLocation,
+      providerid: providerId1 != null ? int.parse(providerId1) : null,
+      providername: selectedProvidername,
+      externaldocumenttype: selecteddocumnettype,
+      externaldocumenttypeid: documenttypeId,
+      patientfirstname: firstname.text,
+      patientlastname: lastname.text,
+      patientdob: _dateOfbirthController.text,
+      isemergencyaddon: toggleVal ?? false,
+      description: Description.text,
+      displayfilename:
+          selecteddocumnettype + "_" + memberId + "_" + formattedDate,
+      uploadedtoserver: uploadedToServerFalse,
+    ));
     //----------gallery images insert to db
 
-    if(localExternalAttachmentId>0){
+    if (localExternalAttachmentId > 0) {
       // print('inserting images of locAttachment $localExternalAttachmentId');
       final String formatted = formatter.format(now);
       for (int i = 0; i < paths.values.toList().length; i++) {
         int photoResult = await DatabaseHelper.db.insertPhotoLists(PhotoList(
-          // id: localExternalAttachmentId,
+            // id: localExternalAttachmentId,
             externalattachmentlocalid: localExternalAttachmentId,
             attachmentname:
-            '${firstname.text ?? ''}_${formatted}_${basename('${paths.values.toList()[i]}')}',
+                '${firstname.text ?? ''}_${formatted}_${basename('${paths.values.toList()[i]}')}',
             createddate: '$now',
             attachmenttype: AppStrings.imageFormat,
             physicalfilename: '${paths.values.toList()[i]}'));
-        print('_saveGalleryImagesToserver photoResult $photoResult of locAttachment $localExternalAttachmentId');
+        print(
+            '_saveGalleryImagesToserver photoResult $photoResult of locAttachment $localExternalAttachmentId');
       }
     }
   }
+
   //------------------save gallery images and data to server with internet
-  _saveGalleryImagesTosever()async{
-    if(paths == null || paths.values == null){
+  _saveGalleryImagesTosever() async {
+    if (paths == null || paths.values == null) {
       return;
     }
 
     DateTime now = DateTime.now();
     String formattedDate = DateFormat(AppStrings.currentdate_text).format(now);
-    int localExternalAttachmentId = await DatabaseHelper.db.insertExternalAttachmentData(
-        ExternalAttachmentList(
-          // externalattachmentid: extId ?? null,
-          practiceid: int.parse(practiceId),
-          practicename: selectedPractice2,
-          locationid: LocationId!=null ? int.parse(LocationId):null,
-          locationname: selectedLocation,
-          providerid: providerId1!=null ? int.parse(providerId1):null,
-          providername: selectedProvidername,
-          externaldocumenttype: selecteddocumnettype,
-          externaldocumenttypeid: documenttypeId,
-          patientfirstname: firstname.text,
-          patientlastname: lastname.text,
-          patientdob: _dateOfbirthController.text,
-          isemergencyaddon: toggleVal ?? false,
-          description: Description.text,
-          displayfilename: selecteddocumnettype + "_" + memberId + "_" + formattedDate,
-          uploadedtoserver: uploadedToServerTrue
-        ));
+    int localExternalAttachmentId = await DatabaseHelper.db
+        .insertExternalAttachmentData(ExternalAttachmentList(
+            // externalattachmentid: extId ?? null,
+            practiceid: int.parse(practiceId),
+            practicename: selectedPractice2,
+            locationid: LocationId != null ? int.parse(LocationId) : null,
+            locationname: selectedLocation,
+            providerid: providerId1 != null ? int.parse(providerId1) : null,
+            providername: selectedProvidername,
+            externaldocumenttype: selecteddocumnettype,
+            externaldocumenttypeid: documenttypeId,
+            patientfirstname: firstname.text,
+            patientlastname: lastname.text,
+            patientdob: _dateOfbirthController.text,
+            isemergencyaddon: toggleVal ?? false,
+            description: Description.text,
+            displayfilename:
+                selecteddocumnettype + "_" + memberId + "_" + formattedDate,
+            uploadedtoserver: uploadedToServerTrue));
     //---------------------gallery images insert to db
 
-    if(localExternalAttachmentId>0){
+    if (localExternalAttachmentId > 0) {
       final String formatted = formatter.format(now);
       for (int i = 0; i < paths.values.toList().length; i++) {
-
         int photoResult = await DatabaseHelper.db.insertPhotoLists(PhotoList(
-          // id: localExternalAttachmentId,
+            // id: localExternalAttachmentId,
             externalattachmentlocalid: localExternalAttachmentId,
             attachmentname:
-            '${firstname.text ?? ''}_${formatted}_${basename('${paths.values.toList()[i]}')}',
+                '${firstname.text ?? ''}_${formatted}_${basename('${paths.values.toList()[i]}')}',
             createddate: '$now',
             attachmenttype: AppStrings.imageFormat,
             physicalfilename: '${paths.values.toList()[i]}'));
 
         final bytes = File('${paths.values.toList()[i]}').readAsBytesSync();
         String galleryImages = base64Encode(bytes);
-        name='${firstname.text ?? ''}_${formatted}_${basename('${paths.values.toList()[i]}')}';
-        photoListOfGallery.add(
-            {
-              "header": {
-                "status": "string",
-                "statusCode": "string",
-                "statusMessage": "string"
-              },
-              "content": galleryImages,
-              "name": name,
-              "attachmentType": ".jpg"
-            }
-        );
+        name =
+            '${firstname.text ?? ''}_${formatted}_${basename('${paths.values.toList()[i]}')}';
+        photoListOfGallery.add({
+          "header": {
+            "status": "string",
+            "statusCode": "string",
+            "statusMessage": "string"
+          },
+          "content": galleryImages,
+          "name": name,
+          "attachmentType": ".jpg"
+        });
       }
       try {
         if (toggleVal == 0) {
@@ -1212,35 +1238,38 @@ List photoListOfGallery = [];
         }
         //........convert image byte format
         ExternalAttachmentPost apiAttachmentPostServices =
-        ExternalAttachmentPost();
+            ExternalAttachmentPost();
         SaveExternalDictationOrAttachment saveDictationAttachments =
-        await apiAttachmentPostServices.postApiServiceMethod(
-            int.parse(practiceId)??null,//selectedPracticeId
-            int.parse(LocationId)??null,//locationId
-            int.parse(providerId1)??null,//providerId
-            firstname.text,//patientFname
-            lastname.text,//patientLname
-            _dateOfbirthController.text,//patientDob
-            memberId,
-            documenttypeId,
-            emergencyAddOn,
-            Description.text,
-            null,
-            null,
-            null,
-            photoListOfGallery
-        );
+            await apiAttachmentPostServices.postApiServiceMethod(
+                int.parse(practiceId) ?? null,
+                //selectedPracticeId
+                int.parse(LocationId) ?? null,
+                //locationId
+                int.parse(providerId1) ?? null,
+                //providerId
+                firstname.text,
+                //patientFname
+                lastname.text,
+                //patientLname
+                _dateOfbirthController.text,
+                //patientDob
+                memberId,
+                documenttypeId,
+                emergencyAddOn,
+                Description.text,
+                null,
+                null,
+                null,
+                photoListOfGallery);
         statusCode = saveDictationAttachments?.header?.statusCode;
         //printing status code
         print("status $statusCode");
         print("memberID:: " + memberId);
         // print("dictationId: From API: " + dicId);
-      }
-      catch (e) {
+      } catch (e) {
         print('SaveAttachmentDictation exception ${e.toString()}');
       }
       // }
-
 
     }
   }

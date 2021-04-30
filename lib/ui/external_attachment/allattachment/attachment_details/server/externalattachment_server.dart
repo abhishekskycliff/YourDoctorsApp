@@ -7,6 +7,8 @@ import 'package:YOURDRS_FlutterAPP/network/services/external_attachment/all_exte
 import 'package:YOURDRS_FlutterAPP/ui/external_attachment/allattachment/attachment_details/external_component.dart';
 import 'package:YOURDRS_FlutterAPP/utils/route_generator.dart';
 import 'package:flutter/material.dart';
+import 'package:pinch_zoom/pinch_zoom.dart';
+import 'package:zoom_widget/zoom_widget.dart';
 
 // ignore: must_be_immutable
 class ExternalAttachmentServer extends StatefulWidget {
@@ -364,26 +366,35 @@ class ExternalAttachmentServerState extends State<ExternalAttachmentServer> {
     showDialog(
       context: context,
       builder: (_) => Dialog(
-        child: Container(
-          width: width,
-          height: height * 0.7,
-          child: Image.network(
-            getExternalPhotos.fileName,
-            fit: BoxFit.fill,
-            loadingBuilder: (BuildContext context, Widget child,
-                ImageChunkEvent loadingProgress) {
-              if (loadingProgress == null) return child;
-              return Center(
-                child: CircularProgressIndicator(
-                  valueColor:
-                      AlwaysStoppedAnimation(CustomizedColors.primaryColor),
-                  value: loadingProgress.expectedTotalBytes != null
-                      ? loadingProgress.cumulativeBytesLoaded /
-                          loadingProgress.expectedTotalBytes
-                      : null,
-                ),
-              );
-            },
+        child: Center(
+          child: Container(
+            width: width,
+            height: height,
+            child: PinchZoom(
+              zoomedBackgroundColor: Colors.black.withOpacity(0.5),
+              resetDuration: const Duration(milliseconds: 100),
+              maxScale: 2.5,
+              onZoomStart: (){print('Start zooming');},
+              onZoomEnd: (){print('Stop zooming');},
+              image: Image.network(
+                getExternalPhotos.fileName,
+                fit: BoxFit.fill,
+                loadingBuilder: (BuildContext context, Widget child,
+                    ImageChunkEvent loadingProgress) {
+                  if (loadingProgress == null) return child;
+                  return Center(
+                    child: CircularProgressIndicator(
+                      valueColor:
+                          AlwaysStoppedAnimation(CustomizedColors.primaryColor),
+                      value: loadingProgress.expectedTotalBytes != null
+                          ? loadingProgress.cumulativeBytesLoaded /
+                              loadingProgress.expectedTotalBytes
+                          : null,
+                    ),
+                  );
+                },
+              ),
+            ),
           ),
         ),
       ),

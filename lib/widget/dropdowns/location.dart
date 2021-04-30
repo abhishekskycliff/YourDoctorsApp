@@ -43,13 +43,13 @@ class _LocationState extends State<LocationDropDown> {
       child: SearchableDropdown.single(
         displayClearIcon: false,
         hint: Text(AppStrings.lochinttxt),
-        label: Text(
-          AppStrings.loctext,
-          style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-              color: CustomizedColors.dropdowntxtcolor),
-        ),
+        // label: Text(
+        //   AppStrings.loctext,
+        //   style: TextStyle(
+        //       fontSize: 16,
+        //       fontWeight: FontWeight.bold,
+        //       color: CustomizedColors.dropdowntxtcolor),
+        // ),
 // ----------> displaying the the data which stored in data of list type <--------
         items: _list.map((item) {
           return DropdownMenuItem<LocationList>(
@@ -59,6 +59,7 @@ class _LocationState extends State<LocationDropDown> {
               ),
               value: item);
         }).toList(),
+        underline: Container(),
         isExpanded: true,
         value: locationList,
         searchHint:

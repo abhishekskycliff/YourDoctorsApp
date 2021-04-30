@@ -46,23 +46,25 @@ class _ProviderState extends State<ProviderDropDowns> {
         displayClearIcon: false,
         
         hint: Text(AppStrings.providerhinttxt),
-        label: Text(
-          AppStrings.providertxt,
-          style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-              color: CustomizedColors.dropdowntxtcolor),
-        ),
+        // label: Text(
+        //   AppStrings.providertxt,
+        //   style: TextStyle(
+        //       fontSize: 16,
+        //       fontWeight: FontWeight.bold,
+        //       color: CustomizedColors.dropdowntxtcolor),
+        // ),
         items: _list.map((item) {
 // ----------> displaying the the data which stored in data of list type <--------
           return DropdownMenuItem<ProviderList>(
             child: Text(
               item.displayname,
               overflow: TextOverflow.ellipsis,
+              maxLines: 1,
             ),
             value: item,
           );
         }).toList(),
+        underline: Container(),
         isExpanded: true,
         value: providerList,
         searchHint: new Text(AppStrings.providerhinttxt,

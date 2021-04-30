@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 import 'package:YOURDRS_FlutterAPP/network/models/login/login_model.dart';
 import 'package:YOURDRS_FlutterAPP/network/repo/local/preference/local_storage.dart';
 import 'package:YOURDRS_FlutterAPP/network/services/login/login_service.dart';
@@ -16,14 +17,21 @@ class LoginBloc extends Bloc<FormScreenEvent, FormScreenState> {
 
   ///Receiving service class instance from main.dart
   @override
-  Stream<FormScreenState> mapEventToState(
-    FormScreenEvent event,
-  ) async* {
+  Stream<FormScreenState> mapEventToState(FormScreenEvent event,) async* {
     try {
       if (event is FormScreenEvent) {
         AuthenticateUser authenticateUser =
-            await services.LoginpostApiMethod(event.email, event.password);
-
+        await services.LoginpostApiMethod(event.email, event.password).catchError((
+            onError) {
+          if (onError is SocketException){
+            print("internet not available");
+          }
+          else if (onError is TimeoutException){
+            print("server timeout");
+          }
+          else
+            print("something went wrong!!");
+        },);
         bool isPinAvailable;
 
         /// check if the status value is 200 in response body.
@@ -71,7 +79,12 @@ class LoginBloc extends Bloc<FormScreenEvent, FormScreenState> {
         }
       }
     } catch (Exception) {
-      // print("Exception Error");
+      yield FormScreenState(
+        isExceptionError: true,
+      );
+      print("Exception Error");
+      print(SocketException("Got socket exception"));
+      print(Exception.toString() + "hello this is an exception");
     }
   }
 }

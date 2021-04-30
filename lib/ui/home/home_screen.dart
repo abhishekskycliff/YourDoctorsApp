@@ -67,7 +67,7 @@ class PatientAppointment extends StatefulWidget {
 }
 
 class _PatientAppointmentState extends State<PatientAppointment> {
-  final _deBouncer = DeBouncer(milliseconds: 500);
+  // final _deBouncer = DeBouncer(milliseconds: 500);
   var displayName = "";
   var profilePic = "";
   var selectedDate;
@@ -207,12 +207,14 @@ class _PatientAppointmentState extends State<PatientAppointment> {
   Widget _appBarWidget() {
     final width = MediaQuery.of(context).size.width;
     return AppBar(
-      // elevation: 0,
+      elevation: 0,
       backgroundColor: CustomizedColors.primaryColor,
       actions: [
         Padding(
           padding: const EdgeInsets.all(10),
-          child: CircleAvatar(backgroundImage: NetworkImage(profilePic)),
+          child: CircleAvatar(
+            backgroundImage: NetworkImage(profilePic ?? AppImages.doctorImg),
+          ),
         ),
         SizedBox(width: 10),
         Center(
@@ -244,14 +246,13 @@ class _PatientAppointmentState extends State<PatientAppointment> {
           transitionType: ContainerTransitionType.fadeThrough,
           transitionDuration: const Duration(milliseconds: 1000),
           openBuilder: (context, action) {
-            return FilterScreen();
+            return _filterWidget();
           },
           closedBuilder: (context, action) {
             return Padding(
               padding: const EdgeInsets.only(right: 10),
-              child: Icon(Icons.segment),
+              child: Icon(Icons.filter_alt_rounded),
             );
-              // Image.asset(AppImages.filterImage);
           },
         ),
       ],
@@ -271,7 +272,7 @@ class _PatientAppointmentState extends State<PatientAppointment> {
     );
   }
 
-  Widget _searchWidget(){
+  Widget _searchWidget() {
     final width = MediaQuery.of(context).size.width;
     final height = MediaQuery.of(context).size.height;
     return Container(
@@ -438,9 +439,9 @@ class _PatientAppointmentState extends State<PatientAppointment> {
             topRight: Radius.circular(40),
           ),
         ),
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.only(top: 30, left: 5, right: 5),
         width: width,
-        height: height * 0.57,
+        height: height,
         child: SingleChildScrollView(
           physics: AlwaysScrollableScrollPhysics(),
           controller: _scrollController,
@@ -449,316 +450,104 @@ class _PatientAppointmentState extends State<PatientAppointment> {
             mainAxisSize: MainAxisSize.min,
             children: <Widget>[
               BlocBuilder<PatientBloc, PatientAppointmentBlocState>(
-                  builder: (context, state) {
-                    try {
-                      if (state.isLoading &&
-                          (state.patients == null || state.patients.isEmpty)) {
-                        return CustomizedCircularProgressBar();
-                      }
-                    } catch (e) {
-                      throw Exception("Error");
+                builder: (context, state) {
+                  try {
+                    if (state.isLoading &&
+                        (state.patients == null || state.patients.isEmpty)) {
+                      return CustomizedCircularProgressBar();
                     }
-                    try {
-                      if (state.errorMsg != null && state.errorMsg.isNotEmpty) {
-                        return Center(
-                          child: Column(
-                            children: [
-                              Image.asset(AppImages.noAppointment),
-                              Text(
-                                state.errorMsg,
-                                style: TextStyle( fontFamily: AppFonts.regular,
-                                    color: CustomizedColors.email_text_color,
-                                    fontSize: 20.0,
-                                    fontWeight: FontWeight.bold),
-                              ),
-                            ],
-                          ),
-                        );
-                      }
-                    } catch (e) {
-                      throw Exception(e.toString());
-                    }
-                    try {
-                      if (state.patients == null || state.patients.isEmpty) {
-                        return Text(
-                          AppStrings.nopatients,
-                          style: TextStyle( fontFamily: AppFonts.regular,
-                              fontSize: 18.0,
-                              fontWeight: FontWeight.bold,
-                              color: CustomizedColors.noAppointment),
-                        );
-                      }
-                    } catch (e) {
-                      throw Exception(e.toString());
-                    }
-                    patients = state.patients;
-                    try {
-                      if (state.keyword != null && state.keyword.isNotEmpty) {
-                        filteredPatients = patients
-                            .where((u) => (u.patient.displayName
-                            .toLowerCase()
-                            .contains(state.keyword.toLowerCase())))
-                            .toList();
-                      } else {
-                        filteredPatients = patients;
-                      }
-                    } catch (e) {
-                      throw Exception(e.toString());
-                    }
-
-                    try {
-                      if (page > 1 && state.hasReachedMax == true) {
-                        String value1 = AppStrings.noData;
-
-                        if (!isShowToast) {
-                          isShowToast = true;
-                          Fluttertoast.showToast(msg: value1).then((value1) {
-                            Fluttertoast.cancel();
-                          });
-                        }
-                      }
-                    } catch (e) {
-                      throw Exception(e.toString());
-                    }
-
-                    /// display count of practice for loop
-                    practiceCountMap.clear();
-                    filteredPatients.forEach((element) {
-                      int practiceCount = practiceCountMap[element.practice];
-                      if (practiceCount == null) {
-                        practiceCount = 0;
-                      }
-
-                      ///count [patients]
-                      practiceCountMap[element.practice] = practiceCount + 1;
-                      locationName[element.practice] = element.location.locationName;
-                    });
-                    return filteredPatients != null && filteredPatients.isNotEmpty
-                        ? Card(
-                      child: GroupedListView<dynamic, String>(
-                        physics: NeverScrollableScrollPhysics(),
-                        elements: filteredPatients,
-                        shrinkWrap: true,
-                        groupBy: (filteredPatients) {
-                          return '${filteredPatients.practice}';
-                        },
-                        groupSeparatorBuilder: (String practice) =>
-                            TransactionGroupSeparator(
-                                practice: practice,
-                                appointmentsCount: practiceCountMap[practice],
-                                locationName: locationName[practice]),
-                        order: GroupedListOrder.ASC,
-                        separator: Container(
-                            height: 1.0, color: CustomizedColors.divider),
-                        itemBuilder: (context, element) => InkWell(
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => PatientDetail(),
-                                settings: RouteSettings(
-                                  arguments: element,
-                                ),
-                              ),
-                            );
-                          },
-                          child: Material(
-                            child: Container(
-                              height: 90,
-                              padding: EdgeInsets.only(
-                                  left: 10, right: 15, top: 5, bottom: 5),
-                              color: CustomizedColors.iconColor,
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Center(
-                                    child: Hero(
-                                      transitionOnUserGestures: true,
-                                      tag: element,
-                                      child: Transform.scale(
-                                        scale: 1.0,
-                                        child: element.isNewPatient == true
-                                            ? Icon(
-                                          Icons.bookmark,
-                                          color: CustomizedColors
-                                              .bookMarkIconColour,
-                                        )
-                                            : Icon(
-                                          Icons.bookmark,
-                                          color: CustomizedColors.primaryColor,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                  SizedBox(width: 20),
-                                  Expanded(
-                                    child: Column(
-                                        crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                        mainAxisAlignment:
-                                        MainAxisAlignment.center,
-                                        children: [
-                                          Text(element.patient.displayName,
-                                              style: TextStyle( fontFamily: AppFonts.regular,
-                                                  fontSize: 14.0,
-                                                  fontWeight: FontWeight.w600)),
-                                          Text(
-                                              "Dr." +
-                                                  "" +
-                                                  element.providerName ??
-                                                  "",
-                                              overflow: TextOverflow.ellipsis,
-                                              style: TextStyle(fontSize: 12.0,fontFamily: AppFonts.regular,)),
-                                          Text(
-                                            element.scheduleName ?? "",
-                                            style: TextStyle(fontSize: 12.0,fontFamily: AppFonts.regular,),
-                                            overflow: TextOverflow.ellipsis,
-                                          ),
-                                          Text(
-                                            element.appointmentStatus ?? "",
-                                            overflow: TextOverflow.ellipsis,
-                                            style: TextStyle(fontSize: 12.0,fontFamily: AppFonts.regular,),
-                                          ),
-                                        ]),
-                                  ),
-
-                                  element.dictationStatus == "Pending"
-                                      ? Column(
-                                    crossAxisAlignment:
-                                    CrossAxisAlignment.end,
-                                    mainAxisSize: MainAxisSize.max,
-                                    mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-
-                                    children: [
-                                      AppConstants.parseDate(
-                                          -1, AppConstants.yyyyMMdd,
-                                          dateTime: DateTime.parse(
-                                              element
-                                                  .appointmentStartDate)) ==
-                                          AppConstants.parseDate(
-                                              -1, AppConstants.yyyyMMdd,
-                                              dateTime:
-                                              DateTime.now())
-                                          ? Text(AppConstants.parseDate(
-                                          -1, AppConstants.hhmma,
-                                          dateTime: DateTime.parse(
-                                              element.appointmentStartDate)),style: TextStyle(fontFamily: AppFonts.regular,),)
-                                          : Text(AppConstants.parseDate(-1, AppConstants.MMMddyyyy,
-                                          dateTime: DateTime.parse(element.appointmentStartDate)),style: TextStyle(fontFamily: AppFonts.regular,),),
-                                      SizedBox(height: 22),
-                                      RichText(
-                                        text: TextSpan(
-                                          text: '• ',
-                                          style: TextStyle(
-                                              color: CustomizedColors
-                                                  .dictationPending,
-                                              fontSize: 14,fontFamily: AppFonts.regular,
-                                              fontWeight: FontWeight.bold),
-                                          children: <TextSpan>[
-                                            TextSpan(
-                                                text: 'Dictation' + " " + element
-                                                    .dictationStatus ?? "",
-                                                style: TextStyle( fontFamily: AppFonts.regular,
-                                                    color: CustomizedColors
-                                                        .dictationStatusColor,
-                                                    fontSize: 12)),
-                                          ],
-                                        ),
-                                      )
-                                    ],
-                                  )
-                                      : element.dictationStatus ==
-                                      "Dictation Completed"
-                                      ? Column(
-                                    crossAxisAlignment:
-                                    CrossAxisAlignment.end,
-                                    mainAxisSize: MainAxisSize.max,
-                                    mainAxisAlignment:
-                                    MainAxisAlignment
-                                        .spaceBetween,
-                                    children: [
-                                      AppConstants.parseDate(-1, AppConstants.yyyyMMdd, dateTime: DateTime.parse(element.appointmentStartDate)) ==
-                                          AppConstants.parseDate(
-                                              -1, AppConstants.yyyyMMdd,
-                                              dateTime:
-                                              DateTime.now())
-                                          ? Text(AppConstants.parseDate(
-                                          -1, AppConstants.hhmma,
-                                          dateTime: DateTime.parse(element
-                                              .appointmentStartDate)),style: TextStyle(fontFamily: AppFonts.regular,),)
-                                          : Text(AppConstants.parseDate(
-                                          -1, AppConstants.MMMddyyyy,
-                                          dateTime: DateTime.parse(element.appointmentStartDate)),style: TextStyle(fontFamily: AppFonts.regular,),),
-                                      // SizedBox(height: 20),
-                                      RichText(
-                                        text: TextSpan(
-                                          text: '• ',
-                                          style: TextStyle(
-                                              color: CustomizedColors
-                                                  .dictationCompleted,
-                                              fontSize: 14,fontFamily: AppFonts.regular,
-                                              fontWeight:
-                                              FontWeight.bold),
-                                          children: <TextSpan>[
-                                            TextSpan(
-                                                text: element
-                                                    .dictationStatus ??
-                                                    "",
-                                                style: TextStyle(
-                                                    color: CustomizedColors
-                                                        .dictationStatusColor,
-                                                    fontSize: 12,fontFamily: AppFonts.regular,
-                                                    fontWeight:
-                                                    FontWeight
-                                                        .w500)),
-                                          ],
-                                        ),
-                                      )
-                                    ],
-                                  )
-                                      : element.dictationStatus ==
-                                      "Not Applicable"
-                                      ? AppConstants.parseDate(
-                                      -1, AppConstants.yyyyMMdd,
-                                      dateTime: DateTime.parse(element
-                                          .appointmentStartDate)) ==
-                                      AppConstants.parseDate(-1,
-                                          AppConstants.yyyyMMdd,
-                                          dateTime:
-                                          DateTime.now())
-                                      ? Text(AppConstants.parseDate(
-                                      -1, AppConstants.hhmma,
-                                      dateTime:
-                                      DateTime.parse(element.appointmentStartDate)),style: TextStyle(fontFamily: AppFonts.regular,),)
-                                      : Text(AppConstants.parseDate(-1, AppConstants.MMMddyyyy, dateTime: DateTime.parse(element.appointmentStartDate)),
-                                    style: TextStyle(fontFamily: AppFonts.regular,),) : Container(),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    )
-                        : Container(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Padding(padding: EdgeInsets.only(top: 175)),
-                          Center(
-                            child: Text(
-                              AppStrings.noresultsfoundrelatedsearch,
-                              style: TextStyle( fontFamily: AppFonts.regular,
+                  } catch (e) {
+                    throw Exception("Error");
+                  }
+                  try {
+                    if (state.errorMsg != null && state.errorMsg.isNotEmpty) {
+                      return Center(
+                        child: Column(
+                          children: [
+                            Image.asset(AppImages.noAppointment),
+                            Text(
+                              state.errorMsg,
+                              style: TextStyle(
+                                  fontFamily: AppFonts.regular,
+                                  color: CustomizedColors.email_text_color,
                                   fontSize: 20.0,
-                                  fontWeight: FontWeight.bold,
-                                  color: CustomizedColors.buttonTitleColor),
+                                  fontWeight: FontWeight.bold),
                             ),
-                          )
+                          ],
+                        ),
+                      );
+                    }
+                  } catch (e) {
+                    throw Exception(e.toString());
+                  }
+                  try {
+                    if (state.patients == null || state.patients.isEmpty) {
+                      return Column(
+                        children: [
+                          Image.asset(AppStrings.noresultsfoundrelatedsearch),
+                          Text(
+                            AppStrings.nopatients,
+                            style: TextStyle(
+                                fontFamily: AppFonts.regular,
+                                color: CustomizedColors.email_text_color,
+                                fontSize: 20.0,
+                                fontWeight: FontWeight.bold),
+                          ),
                         ],
-                      ),
-                    );
-                  }),
+                      );
+                    }
+                  } catch (e) {
+                    throw Exception(e.toString());
+                  }
+                  patients = state.patients;
+                  try {
+                    if (state.keyword != null && state.keyword.isNotEmpty) {
+                      filteredPatients = patients
+                          .where((u) => (u.patient.displayName
+                              .toLowerCase()
+                              .contains(state.keyword.toLowerCase())))
+                          .toList();
+                    } else {
+                      filteredPatients = patients;
+                    }
+                  } catch (e) {
+                    throw Exception(e.toString());
+                  }
+
+                  try {
+                    if (page > 1 && state.hasReachedMax == true) {
+                      String value1 = AppStrings.noData;
+
+                      if (!isShowToast) {
+                        isShowToast = true;
+                        Fluttertoast.showToast(msg: value1).then((value1) {
+                          Fluttertoast.cancel();
+                        });
+                      }
+                    }
+                  } catch (e) {
+                    throw Exception(e.toString());
+                  }
+
+                  /// display count of practice for loop
+                  practiceCountMap.clear();
+                  filteredPatients.forEach((element) {
+                    int practiceCount = practiceCountMap[element.practice];
+                    if (practiceCount == null) {
+                      practiceCount = 0;
+                    }
+
+                    ///count [patients]
+                    practiceCountMap[element.practice] = practiceCount + 1;
+                    locationName[element.practice] =
+                        element.location.locationName;
+                  });
+
+                  return filteredPatients != null && filteredPatients.isNotEmpty
+                      ? _groupedListView()
+                      : _noAppointmentRelatedToSearch();
+                },
+              ),
             ],
           ),
         ),
@@ -766,738 +555,525 @@ class _PatientAppointmentState extends State<PatientAppointment> {
     );
   }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  // // patient Appointment card related code//
-  // Widget patientAppointmentCard() {
-  //   double width = MediaQuery.of(context).size.width;
-  //   double height = MediaQuery.of(context).size.height;
-  //   return Container(
-  //     height: width > 600
-  //         ? MediaQuery.of(context).size.height * 0.73
-  //         : height * 0.50,
-  //     decoration: BoxDecoration(
-  //       borderRadius: BorderRadius.only(
-  //           topLeft: Radius.circular(30), topRight: Radius.circular(30)),
-  //       color: CustomizedColors.textColor,
-  //     ),
-  //     child: SingleChildScrollView(
-  //       physics: AlwaysScrollableScrollPhysics(),
-  //       controller: _scrollController,
-  //       child: Column(
-  //         crossAxisAlignment: CrossAxisAlignment.start,
-  //         mainAxisSize: MainAxisSize.min,
-  //         children: <Widget>[
-  //           BlocBuilder<PatientBloc, PatientAppointmentBlocState>(
-  //               builder: (context, state) {
-  //             try {
-  //               if (state.isLoading &&
-  //                   (state.patients == null || state.patients.isEmpty)) {
-  //                 // showLoadingDialog(context, text: 'Getting appointments');
-  //                 return CustomizedCircularProgressBar();
-  //               }
-  //             } catch (e) {
-  //               throw Exception("Error");
-  //             }
-  //             try {
-  //               if (state.errorMsg != null && state.errorMsg.isNotEmpty) {
-  //                 return Container(
-  //                   padding: EdgeInsets.only(top: 175),
-  //                   child: Center(
-  //                       child: Text(
-  //                     state.errorMsg,
-  //                     style: TextStyle(
-  //                         fontFamily: AppFonts.regular,
-  //                         color: CustomizedColors.buttonTitleColor,
-  //                         fontSize: 20.0,
-  //                         fontWeight: FontWeight.bold),
-  //                   )),
-  //                 );
-  //               }
-  //             } catch (e) {
-  //               throw Exception(e.toString());
-  //             }
-  //             try {
-  //               if (state.patients == null || state.patients.isEmpty) {
-  //                 return Text(
-  //                   AppStrings.nopatients,
-  //                   style: TextStyle(
-  //                       fontFamily: AppFonts.regular,
-  //                       fontSize: 18.0,
-  //                       fontWeight: FontWeight.bold,
-  //                       color: CustomizedColors.noAppointment),
-  //                 );
-  //               }
-  //             } catch (e) {
-  //               throw Exception(e.toString());
-  //             }
-  //             patients = state.patients;
-  //             try {
-  //               if (state.keyword != null && state.keyword.isNotEmpty) {
-  //                 filteredPatients = patients
-  //                     .where((u) => (u.patient.displayName
-  //                         .toLowerCase()
-  //                         .contains(state.keyword.toLowerCase())))
-  //                     .toList();
-  //               } else {
-  //                 filteredPatients = patients;
-  //               }
-  //             } catch (e) {
-  //               throw Exception(e.toString());
-  //             }
-  //
-  //             try {
-  //               if (page > 1 && state.hasReachedMax == true) {
-  //                 String value1 = AppStrings.noData;
-  //
-  //                 if (!isShowToast) {
-  //                   isShowToast = true;
-  //                   Fluttertoast.showToast(msg: value1).then((value1) {
-  //                     Fluttertoast.cancel();
-  //                   });
-  //                 }
-  //               }
-  //             } catch (e) {
-  //               throw Exception(e.toString());
-  //             }
-  //
-  //             /// display count of practice for loop
-  //             practiceCountMap.clear();
-  //             filteredPatients.forEach((element) {
-  //               int practiceCount = practiceCountMap[element.practice];
-  //               if (practiceCount == null) {
-  //                 practiceCount = 0;
-  //               }
-  //
-  //               ///count [patients]
-  //               practiceCountMap[element.practice] = practiceCount + 1;
-  //               locationName[element.practice] = element.location.locationName;
-  //             });
-  //             return filteredPatients != null && filteredPatients.isNotEmpty
-  //                 ? Card(
-  //                     child: GroupedListView<dynamic, String>(
-  //                       physics: NeverScrollableScrollPhysics(),
-  //                       elements: filteredPatients,
-  //                       shrinkWrap: true,
-  //                       groupBy: (filteredPatients) {
-  //                         return '${filteredPatients.practice}';
-  //                       },
-  //                       groupSeparatorBuilder: (String practice) =>
-  //                           TransactionGroupSeparator(
-  //                               practice: practice,
-  //                               appointmentsCount: practiceCountMap[practice],
-  //                               locationName: locationName[practice]),
-  //                       order: GroupedListOrder.ASC,
-  //                       separator: Container(
-  //                           height: 1.0, color: CustomizedColors.divider),
-  //                       itemBuilder: (context, element) => InkWell(
-  //                         onTap: () {
-  //                           Navigator.push(
-  //                             context,
-  //                             MaterialPageRoute(
-  //                               builder: (context) => PatientDetail(),
-  //                               settings: RouteSettings(
-  //                                 arguments: element,
-  //                               ),
-  //                             ),
-  //                           );
-  //                         },
-  //                         child: Material(
-  //                           child: Container(
-  //                             height: 90,
-  //                             padding: EdgeInsets.only(
-  //                                 left: 10, right: 15, top: 5, bottom: 5),
-  //                             color: CustomizedColors.iconColor,
-  //                             child: Row(
-  //                               mainAxisSize: MainAxisSize.min,
-  //                               crossAxisAlignment: CrossAxisAlignment.start,
-  //                               children: [
-  //                                 Center(
-  //                                   child: Hero(
-  //                                     transitionOnUserGestures: true,
-  //                                     tag: element,
-  //                                     child: Transform.scale(
-  //                                       scale: 1.0,
-  //                                       child: element.isNewPatient == true
-  //                                           ? Icon(
-  //                                               Icons.bookmark,
-  //                                               color: CustomizedColors
-  //                                                   .bookMarkIconColour,
-  //                                             )
-  //                                           : Icon(
-  //                                               Icons.bookmark,
-  //                                               color:
-  //                                                   CustomizedColors.background,
-  //                                             ),
-  //                                     ),
-  //                                   ),
-  //                                 ),
-  //                                 SizedBox(width: 20),
-  //                                 Expanded(
-  //                                   child: Column(
-  //                                       crossAxisAlignment:
-  //                                           CrossAxisAlignment.start,
-  //                                       mainAxisAlignment:
-  //                                           MainAxisAlignment.center,
-  //                                       children: [
-  //                                         Text(element.patient.displayName,
-  //                                             style: TextStyle(
-  //                                                 fontFamily: AppFonts.regular,
-  //                                                 fontSize: 14.0,
-  //                                                 fontWeight: FontWeight.w600)),
-  //                                         Text(
-  //                                             "Dr." +
-  //                                                     "" +
-  //                                                     element.providerName ??
-  //                                                 "",
-  //                                             overflow: TextOverflow.ellipsis,
-  //                                             style: TextStyle(
-  //                                               fontSize: 12.0,
-  //                                               fontFamily: AppFonts.regular,
-  //                                             )),
-  //                                         Text(
-  //                                           element.scheduleName ?? "",
-  //                                           style: TextStyle(
-  //                                             fontSize: 12.0,
-  //                                             fontFamily: AppFonts.regular,
-  //                                           ),
-  //                                           overflow: TextOverflow.ellipsis,
-  //                                         ),
-  //                                         Text(
-  //                                           element.appointmentStatus ?? "",
-  //                                           overflow: TextOverflow.ellipsis,
-  //                                           style: TextStyle(
-  //                                             fontSize: 12.0,
-  //                                             fontFamily: AppFonts.regular,
-  //                                           ),
-  //                                         ),
-  //                                       ]),
-  //                                 ),
-  //                                 element.dictationStatus == "Pending"
-  //                                     ? Column(
-  //                                         crossAxisAlignment:
-  //                                             CrossAxisAlignment.end,
-  //                                         mainAxisSize: MainAxisSize.max,
-  //                                         mainAxisAlignment:
-  //                                             MainAxisAlignment.spaceBetween,
-  //                                         children: [
-  //                                           AppConstants.parseDate(-1,
-  //                                                       AppConstants.yyyyMMdd,
-  //                                                       dateTime: DateTime
-  //                                                           .parse(element
-  //                                                               .appointmentStartDate)) ==
-  //                                                   AppConstants.parseDate(-1,
-  //                                                       AppConstants.yyyyMMdd,
-  //                                                       dateTime:
-  //                                                           DateTime.now())
-  //                                               ? Text(
-  //                                                   AppConstants.parseDate(
-  //                                                       -1, AppConstants.hhmma,
-  //                                                       dateTime: DateTime
-  //                                                           .parse(element
-  //                                                               .appointmentStartDate)),
-  //                                                   style: TextStyle(
-  //                                                     fontFamily:
-  //                                                         AppFonts.regular,
-  //                                                   ),
-  //                                                 )
-  //                                               : Text(
-  //                                                   AppConstants.parseDate(-1,
-  //                                                       AppConstants.MMMddyyyy,
-  //                                                       dateTime: DateTime
-  //                                                           .parse(element
-  //                                                               .appointmentStartDate)),
-  //                                                   style: TextStyle(
-  //                                                     fontFamily:
-  //                                                         AppFonts.regular,
-  //                                                   ),
-  //                                                 ),
-  //                                           SizedBox(height: 22),
-  //                                           RichText(
-  //                                             text: TextSpan(
-  //                                               text: '• ',
-  //                                               style: TextStyle(
-  //                                                   color: CustomizedColors
-  //                                                       .dictationPending,
-  //                                                   fontSize: 14,
-  //                                                   fontFamily:
-  //                                                       AppFonts.regular,
-  //                                                   fontWeight:
-  //                                                       FontWeight.bold),
-  //                                               children: <TextSpan>[
-  //                                                 TextSpan(
-  //                                                     text: 'Dictation' +
-  //                                                             " " +
-  //                                                             element
-  //                                                                 .dictationStatus ??
-  //                                                         "",
-  //                                                     style: TextStyle(
-  //                                                         fontFamily:
-  //                                                             AppFonts.regular,
-  //                                                         color: CustomizedColors
-  //                                                             .dictationStatusColor,
-  //                                                         fontSize: 12)),
-  //                                               ],
-  //                                             ),
-  //                                           )
-  //                                         ],
-  //                                       )
-  //                                     : element.dictationStatus ==
-  //                                             "Dictation Completed"
-  //                                         ? Column(
-  //                                             crossAxisAlignment:
-  //                                                 CrossAxisAlignment.end,
-  //                                             mainAxisSize: MainAxisSize.max,
-  //                                             mainAxisAlignment:
-  //                                                 MainAxisAlignment
-  //                                                     .spaceBetween,
-  //                                             children: [
-  //                                               AppConstants.parseDate(
-  //                                                           -1,
-  //                                                           AppConstants
-  //                                                               .yyyyMMdd,
-  //                                                           dateTime: DateTime
-  //                                                               .parse(element
-  //                                                                   .appointmentStartDate)) ==
-  //                                                       AppConstants.parseDate(
-  //                                                           -1,
-  //                                                           AppConstants
-  //                                                               .yyyyMMdd,
-  //                                                           dateTime:
-  //                                                               DateTime.now())
-  //                                                   ? Text(
-  //                                                       AppConstants.parseDate(
-  //                                                           -1,
-  //                                                           AppConstants.hhmma,
-  //                                                           dateTime: DateTime
-  //                                                               .parse(element
-  //                                                                   .appointmentStartDate)),
-  //                                                       style: TextStyle(
-  //                                                         fontFamily:
-  //                                                             AppFonts.regular,
-  //                                                       ),
-  //                                                     )
-  //                                                   : Text(
-  //                                                       AppConstants.parseDate(
-  //                                                           -1,
-  //                                                           AppConstants
-  //                                                               .MMMddyyyy,
-  //                                                           dateTime: DateTime
-  //                                                               .parse(element
-  //                                                                   .appointmentStartDate)),
-  //                                                       style: TextStyle(
-  //                                                         fontFamily:
-  //                                                             AppFonts.regular,
-  //                                                       ),
-  //                                                     ),
-  //                                               // SizedBox(height: 20),
-  //                                               RichText(
-  //                                                 text: TextSpan(
-  //                                                   text: '• ',
-  //                                                   style: TextStyle(
-  //                                                       color: CustomizedColors
-  //                                                           .dictationCompleted,
-  //                                                       fontSize: 14,
-  //                                                       fontFamily:
-  //                                                           AppFonts.regular,
-  //                                                       fontWeight:
-  //                                                           FontWeight.bold),
-  //                                                   children: <TextSpan>[
-  //                                                     TextSpan(
-  //                                                         text: element
-  //                                                                 .dictationStatus ??
-  //                                                             "",
-  //                                                         style: TextStyle(
-  //                                                             color: CustomizedColors
-  //                                                                 .dictationStatusColor,
-  //                                                             fontSize: 12,
-  //                                                             fontFamily:
-  //                                                                 AppFonts
-  //                                                                     .regular,
-  //                                                             fontWeight:
-  //                                                                 FontWeight
-  //                                                                     .w500)),
-  //                                                   ],
-  //                                                 ),
-  //                                               )
-  //                                             ],
-  //                                           )
-  //                                         : element.dictationStatus ==
-  //                                                 "Not Applicable"
-  //                                             ? AppConstants.parseDate(-1,
-  //                                                         AppConstants.yyyyMMdd,
-  //                                                         dateTime: DateTime
-  //                                                             .parse(element
-  //                                                                 .appointmentStartDate)) ==
-  //                                                     AppConstants.parseDate(-1,
-  //                                                         AppConstants.yyyyMMdd,
-  //                                                         dateTime:
-  //                                                             DateTime.now())
-  //                                                 ? Text(
-  //                                                     AppConstants.parseDate(-1,
-  //                                                         AppConstants.hhmma,
-  //                                                         dateTime: DateTime
-  //                                                             .parse(element
-  //                                                                 .appointmentStartDate)),
-  //                                                     style: TextStyle(
-  //                                                       fontFamily:
-  //                                                           AppFonts.regular,
-  //                                                     ),
-  //                                                   )
-  //                                                 : Text(
-  //                                                     AppConstants.parseDate(
-  //                                                         -1,
-  //                                                         AppConstants
-  //                                                             .MMMddyyyy,
-  //                                                         dateTime: DateTime
-  //                                                             .parse(element
-  //                                                                 .appointmentStartDate)),
-  //                                                     style: TextStyle(
-  //                                                       fontFamily:
-  //                                                           AppFonts.regular,
-  //                                                     ),
-  //                                                   )
-  //                                             : Container(),
-  //                               ],
-  //                             ),
-  //                           ),
-  //                         ),
-  //                       ),
-  //                     ),
-  //                   )
-  //                 : Container(
-  //                     child: Column(
-  //                       mainAxisAlignment: MainAxisAlignment.center,
-  //                       children: [
-  //                         Padding(padding: EdgeInsets.only(top: 175)),
-  //                         Center(
-  //                           child: Text(
-  //                             AppStrings.noresultsfoundrelatedsearch,
-  //                             style: TextStyle(
-  //                                 fontFamily: AppFonts.regular,
-  //                                 fontSize: 20.0,
-  //                                 fontWeight: FontWeight.bold,
-  //                                 color: CustomizedColors.buttonTitleColor),
-  //                           ),
-  //                         )
-  //                       ],
-  //                     ),
-  //                   );
-  //           }),
-  //         ],
-  //       ),
-  //     ),
-  //   );
-  // }
-
-  _filterDialog(BuildContext buildContext) {
-    FocusScope.of(context).requestFocus(new FocusNode());
-    _textFieldController.clear();
-    return showDialog(
-      context: buildContext,
-      builder: (ctx) => ListView(
-        children: [
-          Padding(
-            padding: EdgeInsets.only(top: 75),
-            child: AlertDialog(
-              title: Text(
-                AppStrings.selectfilter,
-                style: GoogleFonts.montserrat(),
+  /// Grouped ListView Widget to display patients details in groups
+  Widget _groupedListView() {
+    final width = MediaQuery.of(context).size.width;
+    final height = MediaQuery.of(context).size.height;
+    return GroupedListView<dynamic, String>(
+      physics: NeverScrollableScrollPhysics(),
+      elements: filteredPatients,
+      shrinkWrap: true,
+      groupBy: (filteredPatients) {
+        return '${filteredPatients.practice}';
+      },
+      groupSeparatorBuilder: (String practice) => TransactionGroupSeparator(
+          practice: practice,
+          appointmentsCount: practiceCountMap[practice],
+          locationName: locationName[practice]),
+      order: GroupedListOrder.ASC,
+      separator: Container(height: 3.0, color: CustomizedColors.background),
+      itemBuilder: (context, element) => InkWell(
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => PatientDetail(),
+              settings: RouteSettings(
+                arguments: element,
               ),
-              actions: <Widget>[
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Container(
-                      width: 250,
-                      child: ProviderDropDowns(onTapOfProviders: (newValue) {
-                        setState(
-                          () {
-                            _currentSelectedProviderId =
-                                (newValue as ProviderList).providerId;
-                          },
-                        );
-                      }),
-                    )
-                  ],
-                ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Container(
-                      width: 250,
-                      child: Dictation(onTapOfDictation: (newValue) {
-                        setState(() {
-                          _currentSelectedDictationId =
-                              (newValue as DictationStatus).dictationstatusid;
-                        });
-                      }),
-                    )
-                  ],
-                ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Container(
-                      width: 250,
-                      child: LocationDropDown(onTapOfLocation: (newValue) {
-                        _currentSelectedLocationId = newValue.locationId;
-                      }),
-                    )
-                  ],
-                ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Container(
-                      height: 55,
-                      width: 245,
-                      margin: EdgeInsets.only(top: 5),
-                      decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(5.0),
-                          border: Border.all(
-                              color: CustomizedColors.homeSubtitleColor)),
-                      child: RaisedButton.icon(
-                          padding: EdgeInsets.fromLTRB(5, 0, 0, 0),
-                          onPressed: () async {
-                            final List<String> result = await Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                    builder: (context) => DateFilter()));
-                            startDate = result.first;
-                            endDate = result.last;
-                          },
-                          shape: RoundedRectangleBorder(
-                              borderRadius:
-                                  BorderRadius.all(Radius.circular(5.0))),
-                          label: Text(
-                            AppStrings.datafiltertitle,
-                            style: GoogleFonts.montserrat(
-                                fontSize: 16.0,
-                                color: CustomizedColors.buttonTitleColor),
+            ),
+          );
+        },
+        child: Container(
+          // color: Colors.green,
+          width: width,
+          height: height * 0.14,
+          padding: EdgeInsets.only(left: 10, right: 10, top: 5, bottom: 5),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Hero(
+                  transitionOnUserGestures: true,
+                  tag: element,
+                  child: Transform.scale(
+                    scale: 1.0,
+                    child: element.isNewPatient == true
+                        ? Icon(
+                            Icons.bookmark,
+                            color: CustomizedColors.bookMarkIconColour,
+                          )
+                        : Icon(
+                            Icons.bookmark,
+                            color: CustomizedColors.primaryColor,
                           ),
-                          icon: Icon(Icons.date_range),
-                          splashColor: CustomizedColors.primaryColor,
-                          color: Colors.white),
-                    ),
-                  ],
+                  ),
                 ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Container(
-                      height: 55,
-                      width: 245,
-                      margin: EdgeInsets.only(top: 5),
-                      decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(5.0),
-                          border: Border.all(
-                              color: CustomizedColors.homeSubtitleColor)),
-                      child: RaisedButton.icon(
-                          padding: EdgeInsets.only(left: 25),
-                          onPressed: () {
-                            return showDialog(
-                                context: context,
-                                builder: (ctx) {
-                                  return AlertDialog(
-                                    title: Text(AppStrings.searchpatienttitle),
-                                    content: TextField(
-                                      onChanged: (value) {
-                                        setState(() {
-                                          valueText = value;
-                                        });
-                                      },
-                                      controller: this._textFieldController,
-                                      decoration: InputDecoration(
-                                          hintText:
-                                              AppStrings.searchpatienttitle),
-                                    ),
-                                    actions: <Widget>[
-                                      FlatButton(
-                                        color: CustomizedColors.accentColor,
-                                        textColor: Colors.white,
-                                        child: Text(AppStrings.cancel),
-                                        onPressed: () {
-                                          setState(() {
-                                            Navigator.pop(ctx);
-                                          });
-                                        },
-                                      ),
-                                      FlatButton(
-                                        color: CustomizedColors.accentColor,
-                                        textColor: Colors.white,
-                                        child: Text(AppStrings.ok),
-                                        onPressed: () {
-                                          setState(() {
-                                            codeDialog = valueText;
-                                            Navigator.pop(ctx);
-                                          });
-                                        },
-                                      ),
-                                    ],
-                                  );
-                                });
-                          },
-                          shape: RoundedRectangleBorder(
-                              borderRadius:
-                                  BorderRadius.all(Radius.circular(5.0))),
-                          label: Text(
-                            AppStrings.searchpatient ??
-                                "${this._textFieldController.text}",
-                            style: GoogleFonts.montserrat(
-                              fontSize: 16.0,
-                              color: CustomizedColors.buttonTitleColor,
-                            ),
-                          ),
-                          icon: Icon(Icons.search),
-                          splashColor: CustomizedColors.primaryColor,
-                          color: Colors.white),
-                    ),
-                  ],
-                ),
-                Row(
+              ),
+              SizedBox(width: width * 0.1),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Container(
-                      height: 55,
-                      width: 245,
-                      margin: EdgeInsets.only(top: 5),
-                      decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(5.0),
-                          border: Border.all(
-                              color: CustomizedColors.homeSubtitleColor)),
-                      child: RaisedButton.icon(
-                          padding: EdgeInsets.fromLTRB(5, 0, 0, 0),
-                          onPressed: () {
-                            FocusScope.of(context)
-                                .requestFocus(new FocusNode());
-                            _textFieldController.clear();
-                            setState(() {
-                              visibleSearchFilter = false;
-                              visibleClearFilter = true;
-                              datePicker = true;
-                              dateRange = false;
-                            });
-                            Future.delayed(Duration(milliseconds: 500), () {
-                              _controller?.animateToDate(
-                                  DateTime.now().subtract(Duration(days: 3)));
-                            });
-                            Navigator.pop(context);
-                            page = 1;
-                            BlocProvider.of<PatientBloc>(context).add(
-                                GetSchedulePatientsList(
-                                    keyword1: null,
-                                    providerId: null,
-                                    locationId: null,
-                                    dictationId: null,
-                                    startDate: null,
-                                    endDate: null,
-                                    searchString: null,
-                                    pageKey: page));
-                          },
-                          shape: RoundedRectangleBorder(
-                              borderRadius:
-                                  BorderRadius.all(Radius.circular(5.0))),
-                          label: Text(
-                            AppStrings.clearfiltertxt,
-                            style: GoogleFonts.montserrat(
-                                fontSize: 16.0,
-                                color: CustomizedColors.buttonTitleColor),
-                          ),
-                          icon: Icon(Icons.filter_alt_sharp),
-                          splashColor: CustomizedColors.primaryColor,
-                          color: Colors.white),
+                    Text(
+                      element.patient.displayName,
+                      style: TextStyle(
+                          fontSize: 14.0, fontWeight: FontWeight.w600),
                     ),
+                    SizedBox(height: height * 0.015),
+                    Text(
+                      "Dr." + "" + element.providerName ?? "",
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 12.0,
+                      ),
+                    ),
+                    SizedBox(height: height * 0.009),
+                    Text(
+                      element.scheduleName ?? "",
+                      style: TextStyle(
+                        fontSize: 12.0,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    SizedBox(height: height * 0.009),
+                    Text(
+                      element.appointmentStatus ?? "",
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 12.0,
+                      ),
+                    ),
+                    SizedBox(height: height * 0.009),
                   ],
                 ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    FlatButton(
-                      onPressed: () {
-                        Navigator.of(context).pop();
-                      },
-                      child: Text(AppStrings.cancel,
+              ),
+              element.dictationStatus == "Pending"
+                  ? _dictationPending(element)
+                  : element.dictationStatus == "Dictation Completed"
+                      ? _dictationCompleted(element)
+                      : element.dictationStatus == "Not Applicable"
+                          ? _notApplicable(element)
+                          : Container(),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Dictation Pending
+  Widget _dictationPending(element) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.end,
+      mainAxisSize: MainAxisSize.max,
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        AppConstants.parseDate(-1, AppConstants.yyyyMMdd,
+                    dateTime: DateTime.parse(element.appointmentStartDate)) ==
+                AppConstants.parseDate(-1, AppConstants.yyyyMMdd,
+                    dateTime: DateTime.now())
+            ? Text(
+                AppConstants.parseDate(-1, AppConstants.hhmma,
+                    dateTime: DateTime.parse(element.appointmentStartDate)),
+              )
+            : Text(
+                AppConstants.parseDate(-1, AppConstants.MMMddyyyy,
+                    dateTime: DateTime.parse(element.appointmentStartDate)),
+              ),
+        SizedBox(height: 22),
+        RichText(
+          text: TextSpan(
+            text: '• ',
+            style: TextStyle(
+                color: CustomizedColors.dictationPending,
+                fontSize: 14,
+                fontFamily: AppFonts.regular,
+                fontWeight: FontWeight.bold),
+            children: <TextSpan>[
+              TextSpan(
+                  text: 'Dictation' + " " + element.dictationStatus ?? "",
+                  style: TextStyle(
+                      fontFamily: AppFonts.regular,
+                      color: CustomizedColors.dictationStatusColor,
+                      fontSize: 12)),
+            ],
+          ),
+        )
+      ],
+    );
+  }
+
+  /// Dictation Completed
+  Widget _dictationCompleted(element) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.end,
+      mainAxisSize: MainAxisSize.max,
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        AppConstants.parseDate(-1, AppConstants.yyyyMMdd,
+                    dateTime: DateTime.parse(element.appointmentStartDate)) ==
+                AppConstants.parseDate(-1, AppConstants.yyyyMMdd,
+                    dateTime: DateTime.now())
+            ? Text(
+                AppConstants.parseDate(-1, AppConstants.hhmma,
+                    dateTime: DateTime.parse(element.appointmentStartDate)),
+                style: TextStyle(
+                  fontFamily: AppFonts.regular,
+                ),
+              )
+            : Text(
+                AppConstants.parseDate(-1, AppConstants.MMMddyyyy,
+                    dateTime: DateTime.parse(element.appointmentStartDate)),
+                style: TextStyle(
+                  fontFamily: AppFonts.regular,
+                ),
+              ),
+        // SizedBox(height: 20),
+        RichText(
+          text: TextSpan(
+            text: '• ',
+            style: TextStyle(
+                color: CustomizedColors.dictationCompleted,
+                fontSize: 14,
+                fontFamily: AppFonts.regular,
+                fontWeight: FontWeight.bold),
+            children: <TextSpan>[
+              TextSpan(
+                  text: element.dictationStatus ?? "",
+                  style: TextStyle(
+                      color: CustomizedColors.dictationStatusColor,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500)),
+            ],
+          ),
+        )
+      ],
+    );
+  }
+
+  /// Dictation Not Applicable
+  Widget _notApplicable(element) {
+    return AppConstants.parseDate(-1, AppConstants.yyyyMMdd,
+                dateTime: DateTime.parse(element.appointmentStartDate)) ==
+            AppConstants.parseDate(-1, AppConstants.yyyyMMdd,
+                dateTime: DateTime.now())
+        ? Text(
+            AppConstants.parseDate(-1, AppConstants.hhmma,
+                dateTime: DateTime.parse(element.appointmentStartDate)),
+            style: TextStyle(
+              fontFamily: AppFonts.regular,
+            ),
+          )
+        : Text(
+            AppConstants.parseDate(-1, AppConstants.MMMddyyyy,
+                dateTime: DateTime.parse(element.appointmentStartDate)),
+            style: TextStyle(
+              fontFamily: AppFonts.regular,
+            ),
+          );
+  }
+
+  /// No Appointments on Related Search
+  Widget _noAppointmentRelatedToSearch() {
+    return Column(
+      children: [
+        Image.asset(AppStrings.noresultsfoundrelatedsearch),
+        Text(
+          AppStrings.noresultsfoundrelatedsearch,
+          style: TextStyle(
+              fontFamily: AppFonts.regular,
+              color: CustomizedColors.email_text_color,
+              fontSize: 20.0,
+              fontWeight: FontWeight.bold),
+        ),
+      ],
+    );
+  }
+
+
+ Widget _filterWidget(){
+    final width = MediaQuery.of(context).size.width;
+    final height = MediaQuery.of(context).size.height;
+    return ListView(
+      children: [
+        Column(
+          // mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            SizedBox(height: height * 0.02),
+            /// Search Patient Filter
+            Container(
+              // color: Colors.blue,
+              width: width,
+              height: height * 0.1,
+              child: Column(
+                children: [
+                  // SizedBox(height: 20),
+                  Container(
+                    // color: Colors.blue,
+                    height: height * 0.08,
+                    width: width * 0.9,
+                    child: Card(
+                      elevation: 10,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: TextFormField(
+                        // controller: _textFieldController,
+                        decoration: InputDecoration(
+                          contentPadding: EdgeInsets.only(left: 20, top: 18),
+                          suffixIcon: Icon(
+                            Icons.search,
+                            color: Colors.grey,
+                          ),
+                          border: InputBorder.none,
+                          hintText: AppStrings.searchpatient,
+                          hintStyle: TextStyle(fontWeight: FontWeight.w400),
+                        ),
+                        // onTap: () {
+                        //   _deBouncer.run(() {
+                        //     BlocProvider.of<PatientBloc>(context)
+                        //         .add(SearchPatientEvent());
+                        //   });
+                        // },
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            /// Select Provider Filter
+            Container(
+              height: height * 0.13,
+              width: width * 0.9,
+              child: Card(
+                elevation: 10,
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20)),
+                child: ProviderDropDowns(
+                  onTapOfProviders: (newValue) {
+                    setState(() {
+                      _currentSelectedProviderId =
+                          (newValue as ProviderList).providerId;
+                    });
+                  },
+                ),
+              ),
+            ),
+            /// Select Dictation Filter
+            Container(
+              height: height * 0.13,
+              width: width * 0.9,
+              child: Card(
+                elevation: 10,
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20)),
+                child: Dictation(onTapOfDictation: (newValue) {
+                  setState(() {
+                    _currentSelectedDictationId =
+                        (newValue as DictationStatus).dictationstatusid;
+                  });
+                }),
+              ),
+            ),
+            /// Select Location Filter
+            Container(
+              height: height * 0.13,
+              width: width * 0.9,
+              child: Card(
+                elevation: 10,
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20)),
+                child: LocationDropDown(onTapOfLocation: (newValue) {
+                  _currentSelectedLocationId = newValue.locationId;
+                }),
+              ),
+            ),
+            /// Select Appointment Date Filter
+            Container(
+              // color: Colors.blue,
+              height: height * 0.13,
+              width: width * 0.9,
+              child: InkWell(
+                onTap: () async {
+                  final List<String> result = await Navigator.push(context,
+                      MaterialPageRoute(builder: (context) => DateFilter()));
+                  startDate = result.first;
+                  endDate = result.last;
+                },
+                child: Card(
+                  elevation: 10,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    // mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      SizedBox(width: width * 0.05),
+                      Text(
+                        "Appointment Date",
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      SizedBox(width: width * 0.4),
+                      Icon(Icons.calendar_today_rounded)
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            SizedBox(height: height * 0.08),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                /// Cancel Button in filter Screen
+                InkWell(
+                  onTap: () {
+                    Navigator.of(context).pop();
+                  },
+                  child: Card(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    elevation: 10,
+                    child: Center(
+                      child: Padding(
+                        padding: const EdgeInsets.only(
+                            top: 20, bottom: 20, left: 40, right: 40),
+                        child: Text(
+                          "Cancel",
                           style: TextStyle(
-                              color: CustomizedColors.primaryColor,
-                              fontSize: 12.0)),
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
                     ),
-                    FlatButton(
-                      onPressed: () {
-                        Navigator.of(context).pop();
-                        setState(() {
-                          visibleSearchFilter = true;
-                          visibleClearFilter = false;
-                          try {
-                            if (startDate != null && endDate != null) {
-                              dateRange = true;
-                              datePicker = false;
-                            } else {
-                              dateRange = false;
-                              datePicker = true;
-                            }
-                          } catch (e) {
-                            throw Exception(e.toString());
-                          }
-                        });
-                        page = 1;
-                        BlocProvider.of<PatientBloc>(context).add(
-                            GetSchedulePatientsList(
-                                keyword1: null,
-                                providerId: _currentSelectedProviderId != null
-                                    ? _currentSelectedProviderId
-                                    : null,
-                                locationId: _currentSelectedLocationId != null
-                                    ? _currentSelectedLocationId
-                                    : null,
-                                dictationId: _currentSelectedDictationId != null
-                                    ? int.tryParse(_currentSelectedDictationId)
-                                    : null,
-                                startDate: startDate != "" ? startDate : null,
-                                endDate: endDate != "" ? endDate : null,
-                                searchString:
-                                    this._textFieldController.text != null
-                                        ? this._textFieldController.text
-                                        : null,
-                                pageKey: page));
-                      },
-                      child: Text(AppStrings.ok,
+                  ),
+                ),
+                // SizedBox(width: width * 0.1),
+                /// Clear Button in filter Screen
+                InkWell(
+                  onTap: () {
+                    FocusScope.of(context).requestFocus(new FocusNode());
+                    _textFieldController.clear();
+                    setState(() {
+                      visibleSearchFilter = false;
+                      visibleClearFilter = true;
+                      datePicker = true;
+                      dateRange = false;
+                    });
+                    Future.delayed(Duration(milliseconds: 500), () {
+                      _controller?.animateToDate(
+                          DateTime.now().subtract(Duration(days: 3)));
+                    });
+                    Navigator.pop(context);
+                    page = 1;
+                    BlocProvider.of<PatientBloc>(context).add(
+                        GetSchedulePatientsList(
+                            keyword1: null,
+                            providerId: null,
+                            locationId: null,
+                            dictationId: null,
+                            startDate: null,
+                            endDate: null,
+                            searchString: null,
+                            pageKey: page));
+                  },
+                  child: Card(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    elevation: 10,
+                    child: Center(
+                      child: Padding(
+                        padding: const EdgeInsets.only(
+                            top: 20, bottom: 20, left: 40, right: 40),
+                        child: Text(
+                          "Clear",
                           style: TextStyle(
-                              color: CustomizedColors.primaryColor,
-                              fontSize: 12.0)),
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
                     ),
-                  ],
+                  ),
+                ),
+                /// Apply Button in filter Screen
+                InkWell(
+                  onTap: () {
+                    Navigator.of(context).pop();
+                    setState(() {
+                      visibleSearchFilter = true;
+                      visibleClearFilter = false;
+                      try {
+                        if (startDate != null && endDate != null) {
+                          dateRange = true;
+                          datePicker = false;
+                        } else {
+                          dateRange = false;
+                          datePicker = true;
+                        }
+                      } catch (e) {
+                        throw Exception(e.toString());
+                      }
+                    });
+                    page = 1;
+                    BlocProvider.of<PatientBloc>(context).add(
+                        GetSchedulePatientsList(
+                            keyword1: null,
+                            providerId:
+                            _currentSelectedProviderId !=
+                                null
+                                ? _currentSelectedProviderId
+                                : null,
+                            locationId: _currentSelectedLocationId != null
+                                ? _currentSelectedLocationId
+                                : null,
+                            dictationId:
+                            _currentSelectedDictationId != null
+                                ? int.tryParse(
+                                _currentSelectedDictationId)
+                                : null,
+                            startDate: startDate != "" ? startDate : null,
+                            endDate: endDate != "" ? endDate : null,
+                            searchString:
+                            this._textFieldController.text != null
+                                ? this._textFieldController.text
+                                : null,
+                            pageKey: page));
+                    isShowToast = false;
+                  },
+                  child: Card(
+                    color: Colors.green,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    elevation: 10,
+                    child: Center(
+                      child: Padding(
+                        padding: const EdgeInsets.only(
+                            top: 20, bottom: 20, left: 40, right: 40),
+                        child: Text(
+                          "Apply",
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
                 ),
               ],
-            ),
-          ),
-        ],
-      ),
+            )
+          ],
+        ),
+      ],
     );
   }
 }

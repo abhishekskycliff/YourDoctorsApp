@@ -8,6 +8,7 @@ class FormScreenState {
   bool isPinAvailable;
   var displayName;
   var profileImg;
+  var isExceptionError;
 
   FormScreenState(
       {this.isTrue,
@@ -15,5 +16,6 @@ class FormScreenState {
       this.isLoading,
       this.isPinAvailable,
       this.displayName,
-      this.profileImg});
+      this.profileImg,
+      this.isExceptionError});
 }

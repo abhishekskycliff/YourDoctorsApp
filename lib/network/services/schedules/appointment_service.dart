@@ -1,14 +1,17 @@
 import 'dart:convert';
+
 import 'package:YOURDRS_FlutterAPP/common/app_constants.dart';
 import 'package:YOURDRS_FlutterAPP/common/app_strings.dart';
-import 'package:YOURDRS_FlutterAPP/network/repo/local/preference/local_storage.dart';
-import 'package:dio/dio.dart';
-import 'package:http/http.dart' as http;
+import 'package:YOURDRS_FlutterAPP/helper/db_helper.dart';
 import 'package:YOURDRS_FlutterAPP/network/models/manual_dictations/appointment_type.dart';
 import 'package:YOURDRS_FlutterAPP/network/models/manual_dictations/document_type.dart';
 import 'package:YOURDRS_FlutterAPP/network/models/manual_dictations/location_field_model.dart';
 import 'package:YOURDRS_FlutterAPP/network/models/manual_dictations/practice.dart';
 import 'package:YOURDRS_FlutterAPP/network/models/manual_dictations/provider_model.dart';
+import 'package:YOURDRS_FlutterAPP/network/repo/local/preference/local_storage.dart';
+import 'package:dio/dio.dart';
+import 'package:http/http.dart' as http;
+
 import '../../models/home/appointment.dart';
 import '../../models/home/location.dart';
 import '../../models/home/provider.dart';
@@ -40,18 +43,16 @@ class Services {
 
 // ------> getSchedule service method also maintaining exception handling
   static Future<List<ScheduleList>> getSchedule(
-    String date,
-    int providerId,
-    int locationId,
-    int dictationId,
-    String startDate,
-    String endDate,
-    String searchString,
-    int memberId,
-    int pageKey,
-    CancelToken token
-  ) async {
-   
+      String date,
+      int providerId,
+      int locationId,
+      int dictationId,
+      String startDate,
+      String endDate,
+      String searchString,
+      int memberId,
+      int pageKey,
+      CancelToken token) async {
     String apiUrl = ApiUrlConstants.getSchedules;
     DateTime defaultDate = DateTime.now();
     var todayDate = AppConstants.parseDate(-1, AppConstants.MMDDYYYY,
@@ -76,28 +77,24 @@ class Services {
     };
     // print(json);
 
-  Response response;
-Dio dio = new Dio();
-    response = await dio.post(
-      apiUrl,
-      data: jsonEncode(json),
-      
-      options: Options(
-        headers: <String, String>{'Content-Type': 'application/json; charset=UTF-8'}
-      )
-    )
-    .catchError(
-      (e) {
-        if (CancelToken.isCancel(e)) {
-          print('$apiUrl: $e');
-        }
-      });
+    Response response;
+    Dio dio = new Dio();
+    response = await dio
+        .post(apiUrl,
+            data: jsonEncode(json),
+            options: Options(headers: <String, String>{
+              'Content-Type': 'application/json; charset=UTF-8'
+            }))
+        .catchError((e) {
+      if (CancelToken.isCancel(e)) {
+        print('$apiUrl: $e');
+      }
+    });
 
 // ------> checking the condition statusCode success or not if success get data or throw the error <---------
     try {
       if (response.statusCode == 200) {
-        Schedule schedule =
-            Schedule.fromJson(response.data);
+        Schedule schedule = Schedule.fromJson(response.data);
         return schedule.scheduleList;
       } else {
         throw Exception("Error");
@@ -105,9 +102,7 @@ Dio dio = new Dio();
     } catch (e) {
       throw Exception(e.toString());
     }
-    
   }
-
 
 // ------> getLocation service method also maintaining exception handling
 
@@ -134,7 +129,7 @@ Dio dio = new Dio();
       }
     } catch (e) {
       throw Exception(e.toString());
-    }finally{
+    } finally {
       client.close();
     }
   }
@@ -147,7 +142,7 @@ Dio dio = new Dio();
 
 // ------> getProviders service also maintaining exception handling
   Future<Providers> getProviders() async {
-    var client =http.Client();
+    var client = http.Client();
     var memberId =
         await MySharedPreferences.instance.getStringValue(Keys.memberId);
     try {
@@ -169,7 +164,7 @@ Dio dio = new Dio();
       }
     } catch (e) {
       throw Exception(e.toString());
-    }finally{
+    } finally {
       client.close();
     }
   }
@@ -180,25 +175,22 @@ Dio dio = new Dio();
     return provider;
   }
 
-  Future<Documenttype> getDocumenttype() async {
-    var client = http.Client();
+  Future<List<Documenttype>> getDocumenttype() async {
+    //  var client = http.Client();
     try {
-      var endpointUrl = ApiUrlConstants.getDocumenttype;
-
-      var requestUrl = endpointUrl;
-      final response = await client.get(Uri.encodeFull(requestUrl),
-          headers: {"Accept": "application/json"});
-      if (response.statusCode == 200) {
-        Documenttype document = parseDocuments(response.body);
-
-        return document;
-      } else {
-        throw Exception("Error");
-      }
+      var url =
+          "https://ydrsdevapi.yourdrs.com/api/MasterData/GetExternalDocumentTypes";
+      print(url);
+      Response response = await Dio().get(url);
+      print(response.data);
+      return (response.data as List).map((employee) {
+        print('Inserting $employee');
+       List<Services> wait =DatabaseHelper.db
+            .insertDocumentType(ExternalDocumentTypesList.fromJson(employee['externalDocumentTypesList']));
+        print("$wait");
+      }).toList();
     } catch (e) {
       throw Exception(e.toString());
-    }finally{
-      client.close();
     }
   }
 
@@ -336,4 +328,5 @@ Dio dio = new Dio();
         ExternalProvider.fromJson(json.decode(responseBody));
     return externalProvider;
   }
+
 }

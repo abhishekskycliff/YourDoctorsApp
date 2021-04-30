@@ -145,6 +145,40 @@ class LoginState extends State<LoginScreen> {
         });
   }
 
+
+  /// Exception Handling to display error message
+  void _alertExceptionError() async {
+    return showDialog<void>(
+      context: context,
+      barrierDismissible: false, // user must tap button!
+      builder: (BuildContext context) {
+        return AlertDialog(
+          elevation: 10,
+          title: Text(
+            "Server error",
+          ),
+          content: Text(
+            "Unable to connect server please try after some time",
+          ),
+          actions: <Widget>[
+            Center(
+              child: ElevatedButton(
+                child: Text(
+                  AppStrings.ok,
+                ),
+                onPressed: () {
+                  Navigator.of(context).pop();
+                  Navigator.of(_keyLoader.currentContext, rootNavigator: true)
+                      .pop();
+                },
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   Future<void> showInternetError(BuildContext context, GlobalKey key) async {
     return showDialog<void>(
         context: context,
@@ -202,7 +236,11 @@ class LoginState extends State<LoginScreen> {
     return BlocListener<LoginBloc, FormScreenState>(
       listener: (context, state) {
         // if the status code is true i.e 200 it execute the statement else go to next statement
-        if (state.isTrue == true) {
+        if (state.isExceptionError == true) {
+          _alertExceptionError();
+          print(state);
+        }
+       else if (state.isTrue == true) {
           // checking for particular member pin is available or not.
           // based on that we are navigating user to respective screens.
           if (state.isPinAvailable == true) {

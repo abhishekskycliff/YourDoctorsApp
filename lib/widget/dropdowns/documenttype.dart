@@ -17,7 +17,9 @@ class _DocumentState extends State<DocumentDropDown>
   bool asTabs = false;
   var _currSelectedDoc;
   //------------------service
-  Services apiServices = Services();
+  //Services apiServices =  Services();
+
+
   ExternalDocumentTypesList externalDocumentTypesList;
   //List<LocationList> _list=[];
   List data = List();
@@ -25,14 +27,22 @@ class _DocumentState extends State<DocumentDropDown>
   @override
   void didChangeDependencies() async {
     super.didChangeDependencies();
-    Documenttype document = await apiServices.getDocumenttype();
-    data = document.externalDocumentTypesList;
+    // Documenttype document = (await apiServices.getDocumenttype()) as Documenttype;
+    // data = document.externalDocumentTypesList;
+    //apiServices.getDocumenttype();
+    var apiServices= Services();
+    print("?????????????????????????????????");
+    print(apiServices);
+    await apiServices.getDocumenttype();
+
 
 //_currentSelectedValue=data;
     if (mounted) {
       setState(() {});
     }
   }
+
+
 
   @override
   void initState() {

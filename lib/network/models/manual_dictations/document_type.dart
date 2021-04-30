@@ -68,7 +68,12 @@ class ExternalDocumentTypesList {
   }
 
   @override
+  // String toString() {
+  //   // TODO: implement toString
+  //   return toJson().toString();
+  // }
   String toString() {
+    return toJson().toString();
     return '$id, $externalDocumentTypeName';
   }
 }

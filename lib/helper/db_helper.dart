@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:YOURDRS_FlutterAPP/common/app_strings.dart';
 import 'package:YOURDRS_FlutterAPP/network/models/manual_dictations/dictation.dart';
+import 'package:YOURDRS_FlutterAPP/network/models/manual_dictations/document_type.dart';
 import 'package:YOURDRS_FlutterAPP/network/models/manual_dictations/photo_list.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
@@ -33,10 +34,42 @@ class DatabaseHelper {
       await db.execute(AppStrings.tableDictation);
       await db.execute(AppStrings.tblPhotoList);
       await db.execute(AppStrings.tblPhotoListExt);
-
       await db.execute(AppStrings.tableExternalAttachment);
-    });
+      // await db.execute(AppStrings.exceptionHandling);
+      await db.execute(AppStrings.externalDocumentType);
+        });
   }
+
+
+ // adding the values
+
+  insertDocumentType(ExternalDocumentTypesList externalDocumentTypesList)async{
+   try{
+     var db = await database;
+     var res = await db.insert(AppStrings.dbexternalDocumentType,{
+       'id':externalDocumentTypesList.id,
+       'externalDocumentTypeName':externalDocumentTypesList.externalDocumentTypeName
+     }
+     );   //externalDocumentTypesList.toJson());
+     return res;
+   }
+   catch (e) {
+     print(e.toString());
+   }
+  }
+
+
+  Future<List<ExternalDocumentTypesList>> getDocumentType() async {
+    final db = await database;
+    final res = await db.rawQuery("SELECT * FROM externalDocument");
+
+    List<ExternalDocumentTypesList> list =
+    res.isNotEmpty ? res.map((c) => ExternalDocumentTypesList.fromJson(c)).toList() : [];
+
+    return list;
+  }
+
+
 
 // Insert Audio and Manual dictation
   insertAudioRecords(PatientDictation newAudio) async {
@@ -361,6 +394,24 @@ class DatabaseHelper {
     return await db
         .rawQuery('SELECT * FROM dictationlocal WHERE uploadedtoserver = 0');
   }
+  // Future<List<ExternalAttachmentList>> getAllExtrenalAttachmentList() async {
+  //   var db = await database;
+  //   var id;
+  //   //Exception handling
+  //   try {
+  //     var res = await db.rawQuery(AppStrings.selectQuery);
+  //     List<ExternalAttachmentList> list = res.isNotEmpty
+  //         ? res.map((c) {
+  //       var user = ExternalAttachmentList.fromMap(c);
+  //       id = ExternalAttachmentList(id: c["id"]);
+  //       return user;
+  //     }).toList()
+  //         : [];
+  //     return list;
+  //   } catch (e) {
+  //     print(e.toString());
+  //   }
+  // }
 
 //close the db
   // db.close();

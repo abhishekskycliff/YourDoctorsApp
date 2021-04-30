@@ -222,6 +222,7 @@ class AppStrings {
 
   //Database table
   static const databaseName = 'ydrslocaldb';
+  static const dbexternalDocumentType = 'externalDocument';
   static const dbTableDictation = "dictationlocal";
   static const dbTableExternalAttachment = 'externalattachmentlocal';
   static const dbTablePhotoList = 'photolistlocal';
@@ -331,6 +332,7 @@ class AppStrings {
   static const selectPhotoQuery =
       'SELECT physicalfilename FROM photolistlocal WHEREid=id';
 
+
   //static const selectPhotoQuery = "SELECT physicalfilename FROM  externalattachmentlocal INNER JOIN photolistlocal on externalattachmentlocal.id=photolistlocal.externalattachmentlocalid";
 
   //static const selectPhotoQuery = "SELECT physicalfilename FROM  externalattachmentlocal INNER JOIN photolistlocal on externalattachmentlocal.id=photolistlocal.externalattachmentlocalid";
@@ -426,17 +428,18 @@ class AppStrings {
       'physicalfilename TEXT DEFAULT NULL,'
       'createddate DATETIME DEFAULT NULL'
       ')';
-  // static const tblPhotoListExt = 'CREATE TABLE photolistlocaltable ('
+
+  // static const exceptionHandling = 'CREATE TABLE exceptionErrors ('
   //     'id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL ,'
-  //     'dictationlocalid INTEGER DEFAULT NULL,'
-  //     'externalattachmentlocalid INTEGER NOT NULL,'
-  //     'attachmentname TEXT DEFAULT NULL,'
-  //     'attachmentsizebytes INTEGER DEFAULT NULL,'
-  //     'attachmenttype TEXT DEFAULT NULL,'
-  //     'fileName TEXT DEFAULT NULL,'
-  //     'physicalfilename TEXT DEFAULT NULL,'
-  //     'createddate DATETIME DEFAULT NULL'
+  //     'errorType TEXT DEFAULT NULL,'
+  //     'errorMessage TEXT DEFAULT NULL'
   //     ')';
+
+  static const externalDocumentType = 'CREATE TABLE externalDocument ('
+      'id INTEGER PRIMARY KEY DEFAULT NULL ,'
+      'externalDocumentTypeName TEXT DEFAULT NULL'
+      ')';
+  //print("$externalDocument");
 
   //Dictation type list
   static const dictationTypeList = [
@@ -549,5 +552,4 @@ class ApiUrlConstants {
 //all my manual dictations get api
 // static const allMyExternalAttachmentUrl =
 //     AppConstants.dioBaseUrl + "api/Dictation/GetExternalDocuments";
-
 }

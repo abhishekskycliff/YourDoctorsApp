@@ -54,13 +54,13 @@ class _DictationSearchState extends State<Dictation> {
       child: SearchableDropdown.single(
         displayClearIcon: false,
         hint: Text(AppStrings.dictationsearchtxt),
-        label: Text(
-          AppStrings.dictationhinttxt,
-          style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-              color: CustomizedColors.dropdowntxtcolor),
-        ),
+        // label: Text(
+        //   AppStrings.dictationhinttxt,
+        //   style: TextStyle(
+        //       fontSize: 16,
+        //       fontWeight: FontWeight.bold,
+        //       color: CustomizedColors.dropdowntxtcolor),
+        // ),
 // ----------> displaying the the data which stored in data of list type <--------
         items: data.map((item) {
           return DropdownMenuItem<DictationStatus>(
@@ -69,6 +69,7 @@ class _DictationSearchState extends State<Dictation> {
           );
         }).toList(),
         value: _currentSelectedValue,
+        underline: Container(),
         isExpanded: true,
         searchHint: new Text(AppStrings.dictationsearchtxt,
             style: new TextStyle(fontSize: 20)),

@@ -124,6 +124,8 @@ dependencies:
   stacked_services: any
   carousel_slider: ^3.0.0
   animations: ^2.0.0
+  zoom_widget: ^0.1.3
+  pinch_zoom: ^0.1.0
 
 
 dev_dependencies:
